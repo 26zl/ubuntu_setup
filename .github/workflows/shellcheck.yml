@@ -2,17 +2,9 @@ name: ShellCheck
 
 on:
   push:
-    branches: ["*"]
-    paths:
-      - "scripts/**"
-      - "configs/bin/**"
-      - "**.sh"
+    branches: ["**"]
   pull_request:
-    branches: ["*"]
-    paths:
-      - "scripts/**"
-      - "configs/bin/**"
-      - "**.sh"
+    branches: ["**"]
 
 permissions:
   contents: read
