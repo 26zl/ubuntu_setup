@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# kali — a Kali Linux shell in rootless Podman, so the heavy pentest tooling
+# never lands on the host. Default is a throwaway container; `kali persist`
+# keeps one named container (apt installs inside it survive) and `kali rm`
+# deletes it. ~/pentest is mounted at /work in both modes.
+#
+#   kali            throwaway shell (container removed on exit)
+#   kali persist    reusable container "kali" (created on first run)
+#   kali rm         delete the persistent container
+#   kali update     pull the newest kali-rolling image
+#
+# NET_RAW lets nmap/tcpdump work inside the container; rootless networking
+# (pasta) still applies, so raw SYN scans of the LAN are best run from the host.
+set -euo pipefail
+
+image="docker.io/kalilinux/kali-rolling"
+name="kali"
+work="${KALI_WORK:-$HOME/pentest}"
+
+command -v podman >/dev/null || { echo "podman is not installed" >&2; exit 1; }
+mkdir -p "$work"
+
+case "${1:-shell}" in
+    shell)
+        exec podman run --rm -it --hostname kali --cap-add=NET_RAW \
+            -v "$work:/work" -w /work "$image" bash
+        ;;
+    persist)
+        if podman container exists "$name"; then
+            exec podman start -ai "$name"
+        fi
+        exec podman run -it --name "$name" --hostname kali --cap-add=NET_RAW \
+            -v "$work:/work" -w /work "$image" bash
+        ;;
+    rm)
+        podman rm -f "$name"
+        ;;
+    update)
+        podman pull "$image"
+        ;;
+    *)
+        sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'
+        exit 2
+        ;;
+esac

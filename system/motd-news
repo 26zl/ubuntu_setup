@@ -1,0 +1,4 @@
+# /etc/default/motd-news — no daily fetch of motd.ubuntu.com: the request's
+# User-Agent carries release, kernel, CPU and uptime. Pro's apt_news (the same
+# feed on every apt run) is turned off by apply-system.sh.
+ENABLED=0

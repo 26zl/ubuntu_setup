@@ -1,0 +1,31 @@
+# macOS
+.DS_Store
+._*
+
+# Windows
+Thumbs.db
+[Dd]esktop.ini
+
+# Linux
+*~
+.Trash-*/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temp / logs / backups made by the scripts
+*.log
+*.tmp
+*.bak
+*.bak-*
+*.orig
+
+# Claude Code
+CLAUDE.md
+.claude/
+
+# Dependencies
+node_modules/

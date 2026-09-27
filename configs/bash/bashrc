@@ -1,0 +1,64 @@
+# ~/.config/bash/bashrc — sourced from ~/.bashrc (apply-user.sh adds the line).
+# Ubuntu's stock ~/.bashrc keeps its prompt and completion defaults; this adds
+# the aliases and tool hooks, each guarded so a missing tool stays silent.
+# fish is the interactive shell in kitty; bash stays the login shell.
+
+[[ $- == *i* ]] || return
+
+export PATH="$HOME/.local/bin:$PATH"
+
+# Homebrew (only if installed and not already on PATH)
+if [[ -z ${HOMEBREW_PREFIX:-} && -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then
+  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv bash)"
+fi
+
+export EDITOR=nvim
+export VISUAL=nvim
+
+# eza — modern ls
+alias ls='eza --icons --group-directories-first'
+alias ll='eza --icons --group-directories-first -lh --git'
+alias la='eza --icons --group-directories-first -lha --git'
+alias tree='eza --icons --tree'
+
+# bat — syntax-highlighted cat
+alias cat='bat --pager=never'
+export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+
+# git
+alias gs='git status'
+alias gd='git diff'
+alias lg='lazygit'
+export GIT_PAGER='delta'
+
+# color for the classics
+alias grep='grep --color=auto'
+alias diff='diff --color=auto'
+
+# rootless Podman is the Docker host for docker-compatible tooling unless a
+# real Docker daemon is installed
+if [[ -S /var/run/docker.sock ]]; then
+  # Docker Engine present: `docker` must reach it; drop a DOCKER_HOST that still
+  # points at Podman (inherited from the session via a removed podman-docker's profile.d hook)
+  if [[ ${DOCKER_HOST:-} == */podman/podman.sock ]]; then unset DOCKER_HOST; fi
+elif [[ -S ${XDG_RUNTIME_DIR:-/run/user/$UID}/podman/podman.sock ]]; then
+  export DOCKER_HOST="unix://${XDG_RUNTIME_DIR:-/run/user/$UID}/podman/podman.sock"
+fi
+
+# yazi — `ya` drops the shell into the directory you quit yazi in
+ya() {
+  local tmp cwd
+  tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+  yazi "$@" --cwd-file="$tmp"
+  if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+    builtin cd -- "$cwd" || return
+  fi
+  rm -f -- "$tmp"
+}
+
+# tool hooks
+command -v mise >/dev/null && eval "$(mise activate bash)"
+command -v direnv >/dev/null && eval "$(direnv hook bash)"
+command -v zoxide >/dev/null && eval "$(zoxide init bash)"
+command -v fzf >/dev/null && eval "$(fzf --bash)"
+command -v starship >/dev/null && eval "$(starship init bash)"

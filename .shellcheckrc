@@ -1,0 +1,7 @@
+# configs/bash/bashrc is sourced from ~/.bashrc and has no shebang — tell
+# ShellCheck it is bash so it does not raise SC2148.
+shell=bash
+
+# Sourced runtime files (brew shellenv, ~/.bashrc) are not resolvable while the
+# check runs in CI.
+disable=SC1091

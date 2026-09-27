@@ -1,0 +1,8 @@
+# /etc/apt/sources.list.d/mullvad.sources — Mullvad VPN app. The "stable" suite
+# is release-independent; Mullvad publishes no per-codename suite for 26.04.
+Types: deb
+URIs: https://repository.mullvad.net/deb/stable
+Suites: stable
+Components: main
+Architectures: amd64
+Signed-By: /etc/apt/keyrings/mullvad-keyring.asc

@@ -1,0 +1,118 @@
+name: Validate Configs
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["*"]
+  schedule:
+    - cron: "0 6 * * 1" # weekly, catches upstream package renames
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate config files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check no private IPs hardcoded in configs
+        run: |
+          if grep -rE '(192\.168\.[0-9]+\.[0-9]+|10\.[0-9]+\.[0-9]+\.[0-9]+|172\.(1[6-9]|2[0-9]|3[01])\.[0-9]+\.[0-9]+)' \
+            --include="*.conf" --include="*.toml" --include="*.sh" --include="*.fish" --include="*.json" . ; then
+            echo "Hardcoded private IP found — remove before committing"
+            exit 1
+          fi
+          echo "No hardcoded IPs found."
+
+      - name: Validate TOML and JSON files
+        run: |
+          set -e
+          for f in $(find . -name "*.toml" -not -path "./.git/*"); do
+            python3 -c "import tomllib; tomllib.load(open('$f','rb'))" && echo "$f: OK"
+          done
+          for f in $(find . -name "*.json" -not -path "./.git/*"); do
+            python3 -c "import json; json.load(open('$f'))" && echo "$f: OK"
+          done
+
+      - name: Check bash syntax and dry-run the user half
+        run: |
+          set -e
+          for f in scripts/*.sh configs/bin/kali; do
+            bash -n "$f" && echo "$f: syntax OK"
+          done
+          bash scripts/apply-user.sh --dry-run
+
+      - name: Check fish syntax
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q fish
+          fish --no-execute configs/fish/config.fish && echo "config.fish: syntax OK"
+
+      - name: Check every system/ file is deployed by apply-system.sh
+        run: |
+          missing=0
+          for f in system/*; do
+            base=$(basename "$f")
+            grep -qF "$base" scripts/apply-system.sh || { echo "NOT DEPLOYED by apply-system.sh: $f"; missing=1; }
+          done
+          exit $missing
+
+      - name: Check every configs/ file is linked by apply-user.sh
+        run: |
+          missing=0
+          for f in $(find configs -type f); do
+            base=$(basename "$f")
+            grep -qF "$base" scripts/apply-user.sh || { echo "NOT LINKED by apply-user.sh: $f"; missing=1; }
+          done
+          exit $missing
+
+  packages:
+    name: Ubuntu 26.04 container - dry-run the system half, resolve every apt package
+    runs-on: ubuntu-latest
+    container: ubuntu:26.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Tools the script expects (sudo for visudo -c)
+        run: |
+          apt-get update -q
+          apt-get install -y -q curl ca-certificates gnupg sudo
+
+      # root inside the container, nothing is changed. The keyrings are absent
+      # here, so fetch() downloads the vendor keys and verifies the pinned hashes
+      # and Chrome's fingerprint for real (the weekly run catches a rotated key).
+      # Third-party packages show as "not in any enabled repo" at this point; the
+      # last step resolves them with the repos added.
+      - name: Dry-run the system half
+        run: bash scripts/apply-system.sh --dry-run --no-snapshot --groups all
+
+      - name: Add the repos the scripts add
+        run: |
+          set -e
+          install -d -m 0755 /etc/apt/keyrings
+          curl -fsSL https://packages.microsoft.com/keys/microsoft.asc -o /etc/apt/keyrings/microsoft.asc
+          curl -fsSL https://repository.mullvad.net/deb/mullvad-keyring.asc -o /etc/apt/keyrings/mullvad-keyring.asc
+          curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/resolute.noarmor.gpg -o /etc/apt/keyrings/tailscale-archive-keyring.gpg
+          curl -fsSL https://dl.google.com/linux/linux_signing_key.pub -o /etc/apt/keyrings/google-chrome.asc
+          cp system/vscode.sources system/mullvad.sources system/tailscale.sources system/google-chrome.sources /etc/apt/sources.list.d/
+          apt-get update -q
+
+      - name: Resolve every package
+        run: |
+          missing=0
+          for p in $(grep -vE '^\s*(#|\[|$)' packages/apt.txt); do
+            if apt-cache policy "$p" | grep -q 'Candidate: (none)' || ! apt-cache policy "$p" | grep -q Candidate; then
+              echo "not available: $p"; missing=1
+            fi
+          done
+          exit $missing

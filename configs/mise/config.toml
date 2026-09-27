@@ -1,0 +1,11 @@
+# ~/.config/mise/config.toml — global runtimes. Go, Rust (rustup) and Java come
+# from apt/rustup because Ubuntu 26.04 ships them current; Node and uv from mise
+# so a project can pin its own version with a local mise.toml / .node-version.
+# pnpm/yarn: `corepack enable` (ships with Node).
+[tools]
+node = "lts"
+uv = "latest"
+
+[settings]
+# never run a version file's hooks or install a tool without an explicit `mise install`
+not_found_auto_install = false

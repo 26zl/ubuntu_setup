@@ -1,0 +1,6 @@
+# Homebrew formulae — only what apt does not ship (or ships too old). gh is here
+# because Ubuntu's 2.46 lags far behind.
+gh
+mise
+yazi
+sops

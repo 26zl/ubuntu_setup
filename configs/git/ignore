@@ -1,0 +1,6 @@
+# Global excludes (~/.config/git/ignore): editor and OS noise only. Project
+# artefacts belong in each repository's own .gitignore.
+.DS_Store
+*~
+*.swp
+.direnv/

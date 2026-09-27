@@ -1,0 +1,6 @@
+# /etc/sudoers.d/10-hardening
+# Run every sudo command on its own pty so a malicious command cannot inject
+# keystrokes into the calling terminal (TIOCSTI-style tty hijack).
+Defaults use_pty
+# Cached credentials expire after 10 minutes instead of 15.
+Defaults timestamp_timeout=10

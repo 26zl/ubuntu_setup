@@ -1,0 +1,182 @@
+# apt packages, grouped. apply-system.sh installs base desktop dev virt security
+# vpn media tools by default; docker is opt-in (--groups all, or --groups docker).
+# Names are validated against apt before the single install call, so a rename
+# fails loud.
+
+[base]
+# shell, prompt, terminal
+fish
+starship
+kitty
+fastfetch
+# modern CLI
+fzf
+ripgrep
+fd-find
+bat
+eza
+zoxide
+git-delta
+lazygit
+tealdeer
+direnv
+btop
+htop
+jq
+yq
+ncdu
+duf
+tree
+unzip
+7zip
+plocate
+rsync
+curl
+wget
+git
+git-lfs
+wl-clipboard
+dconf-cli
+# hardware and network diagnostics
+lm-sensors
+iw
+smartmontools
+nvme-cli
+powertop
+acpi
+iperf3
+whois
+bind9-dnsutils
+traceroute
+mtr-tiny
+netcat-openbsd
+# editor (EDITOR=nvim in the shell configs; the 26zl/nvim config expects 0.11.3+)
+neovim
+# Claude Code sandbox prerequisites
+bubblewrap
+socat
+# system snapshots (baseline before this setup, then daily)
+timeshift
+
+[desktop]
+keepassxc
+flatpak
+# Google's repo is added by apply-system.sh (key verified by fingerprint)
+google-chrome-stable
+# VA-API hardware video decode/encode and OpenCL (hashcat); the two intel-*
+# packages are left out automatically when no Intel GPU is present
+intel-media-va-driver-non-free
+vainfo
+intel-opencl-icd
+# Space bar previews files in Files
+gnome-sushi
+
+[dev]
+build-essential
+cmake
+pkg-config
+python3-dev
+python3-venv
+python3-pip
+pipx
+libssl-dev
+libffi-dev
+sqlite3
+postgresql-client
+redis-tools
+httpie
+mkcert
+libnss3-tools
+shellcheck
+shfmt
+code
+golang-go
+rustup
+openjdk-21-jdk
+
+[virt]
+qemu-system-x86
+qemu-utils
+libvirt-daemon-system
+libvirt-clients
+virt-manager
+virt-viewer
+ovmf
+swtpm
+swtpm-tools
+virtiofsd
+podman
+podman-compose
+podman-docker
+buildah
+skopeo
+
+[security]
+nmap
+ncat
+tcpdump
+wireshark
+tshark
+ffuf
+gobuster
+sqlmap
+nikto
+hydra
+john
+hashcat
+binwalk
+libimage-exiftool-perl
+hexyl
+yara
+lynis
+# verifies installed package files against dpkg's checksums: debsums -s
+debsums
+clamav
+clamav-freshclam
+apparmor-utils
+age
+wireguard-tools
+
+[vpn]
+mullvad-vpn
+tailscale
+
+[media]
+# desktop media and creative apps; apt reuses the Qt/GTK libraries already on
+# the system where the Flathub builds would pull three runtimes (~2 GB)
+vlc
+gimp
+obs-studio
+
+[tools]
+# general quick tools, useful far beyond security work
+ffmpeg
+imagemagick
+pandoc
+poppler-utils
+qrencode
+zbar-tools
+moreutils
+pv
+parallel
+entr
+fdupes
+trash-cli
+sshfs
+cifs-utils
+testdisk
+speedtest-cli
+testssl.sh
+magic-wormhole
+hyperfine
+tokei
+
+[docker]
+# opt-in: a root daemon and a root-equivalent `docker` group; rootless Podman
+# with podman-docker covers the docker CLI without either. apply-system.sh
+# drops podman-docker when this group is selected (both ship /usr/bin/docker)
+# and deploys system/docker-daemon.json: published ports bind to 127.0.0.1
+# unless a container asks for 0.0.0.0 explicitly, because Docker's own
+# firewall rules bypass ufw.
+docker.io
+docker-compose-v2

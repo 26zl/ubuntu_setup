@@ -1,0 +1,30 @@
+# ~/.config/git/config — shared defaults. Identity and the gh credential helper
+# live in ~/.gitconfig, written by scripts/setup-github.sh; git reads both.
+[init]
+	defaultBranch = main
+[pull]
+	rebase = false
+[push]
+	autoSetupRemote = true
+[fetch]
+	prune = true
+[rebase]
+	autoStash = true
+[merge]
+	conflictstyle = zdiff3
+[diff]
+	algorithm = histogram
+	colorMoved = default
+[core]
+	editor = nvim
+	pager = delta
+[interactive]
+	diffFilter = delta --color-only
+[delta]
+	navigate = true
+	line-numbers = true
+	syntax-theme = Nord
+[alias]
+	st = status -sb
+	lg = log --oneline --graph --decorate -20
+	last = log -1 --stat

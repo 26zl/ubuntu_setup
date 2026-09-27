@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# GitHub CLI + git authentication. Run as your normal user (NO sudo):
+#   bash scripts/setup-github.sh
+set -euo pipefail
+
+# gh stores credentials per user and opens the user's browser — sudo breaks both
+if [ "$EUID" -eq 0 ]; then
+  echo "ERROR: run without sudo, as your normal user." >&2
+  exit 1
+fi
+[ -x /home/linuxbrew/.linuxbrew/bin/brew ] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv bash)"
+command -v gh >/dev/null || { echo "gh not found (brew install gh, or apt install gh)" >&2; exit 1; }
+
+if gh auth status >/dev/null 2>&1; then
+  echo "==> Already logged in to GitHub:"
+  gh auth status
+else
+  echo "==> Logging in to GitHub via your web browser..."
+  gh auth login --hostname github.com --git-protocol https --web
+fi
+
+echo "==> Wiring git <-> gh credentials"
+gh auth setup-git
+
+# Derive the global git identity from the GitHub account; fall back to the
+# privacy-preserving noreply address when the account email is hidden.
+login="$(gh api user --jq .login)"
+name="$(gh api user --jq .login)"
+id="$(gh api user --jq .id)"
+email="$(gh api user --jq '.email // empty')"
+[ -z "$email" ] && email="${id}+${login}@users.noreply.github.com"
+git config --global user.name "$name"
+git config --global user.email "$email"
+
+# shared defaults (delta, aliases, pull/push behaviour) live in ~/.config/git/config
+echo
+echo "DONE. git user.name=$(git config --global user.name)  user.email=$(git config --global user.email)"

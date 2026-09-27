@@ -1,0 +1,4 @@
+# Flatpak apps from Flathub, installed per user (no root) by apply-user.sh and
+# updated by update.sh. Sandboxed through bubblewrap; permissions are editable
+# with Flatseal if needed.
+com.discordapp.Discord

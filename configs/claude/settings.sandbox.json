@@ -1,0 +1,20 @@
+{
+  "_comment": "Reference block for ~/.claude/settings.json — merge the `sandbox` key by hand or enable interactively with /sandbox. Commands run in bubblewrap (writes limited to the project, network through an allow-listed proxy); sudo/systemctl/podman are excluded and go through the normal permission prompt. Prerequisites on Ubuntu 26.04: bubblewrap + socat (installed by apply-system.sh); Ubuntu's bwrap AppArmor profile already permits user namespaces.",
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": false,
+    "allowUnsandboxedCommands": true,
+    "filesystem": {
+      "denyRead": ["~/.ssh", "~/.gnupg", "~/.config/gh", "~/.local/share/keyrings"]
+    },
+    "network": {
+      "allowedDomains": [
+        "github.com", "*.github.com", "objects.githubusercontent.com",
+        "registry.npmjs.org", "pypi.org", "files.pythonhosted.org",
+        "crates.io", "static.crates.io", "index.crates.io",
+        "proxy.golang.org", "sum.golang.org"
+      ]
+    },
+    "excludedCommands": ["podman *", "docker *", "virsh *", "kali *"]
+  }
+}

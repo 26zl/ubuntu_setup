@@ -1,0 +1,7 @@
+# /etc/apt/sources.list.d/vscode.sources — Microsoft's VS Code repository.
+Types: deb
+URIs: https://packages.microsoft.com/repos/code
+Suites: stable
+Components: main
+Architectures: amd64
+Signed-By: /etc/apt/keyrings/microsoft.asc
