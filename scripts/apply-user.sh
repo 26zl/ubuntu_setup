@@ -75,7 +75,7 @@ if ! grep -qF '.config/bash/bashrc' "$HOME/.bashrc" 2>/dev/null; then
     if [ "$DRY" -eq 1 ]; then
         echo "  [dry] append the source line to $HOME/.bashrc"
     else
-        printf '\n# ubuntu-26.04-gnome-setup additions\n[ -f ~/.config/bash/bashrc ] && . ~/.config/bash/bashrc\n' >> "$HOME/.bashrc"
+        printf '\n# ubuntu_setup additions\n[ -f ~/.config/bash/bashrc ] && . ~/.config/bash/bashrc\n' >> "$HOME/.bashrc"
     fi
     ok "$HOME/.bashrc sources ~/.config/bash/bashrc"
 fi

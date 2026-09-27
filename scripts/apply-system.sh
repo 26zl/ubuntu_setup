@@ -108,7 +108,7 @@ PY
         ok "snapshots already exist ($(find /timeshift/snapshots -mindepth 1 -maxdepth 1 | wc -l)); not creating another baseline"
     else
         timeshift --create --rsync --snapshot-device "$rootdev" --scripted \
-            --comments "baseline before ubuntu-26.04-gnome-setup" >/dev/null
+            --comments "baseline before ubuntu_setup" >/dev/null
         ok "baseline snapshot created on $rootdev (sudo timeshift --list)"
     fi
 else
@@ -366,7 +366,7 @@ windisk=$(lsblk -rno PKNAME,FSTYPE 2>/dev/null | awk '$2 == "BitLocker" {print $
 if [ -n "$windisk" ]; then
     ptuuid=$(lsblk -dno PTUUID "/dev/$windisk")
     tmp=$(mktemp)
-    printf '# ubuntu-26.04-gnome-setup: hide the Windows (BitLocker) disk from udisks/Files/Disks\nSUBSYSTEM=="block", ENV{ID_PART_TABLE_UUID}=="%s", ENV{UDISKS_IGNORE}="1"\n' "$ptuuid" > "$tmp"
+    printf '# ubuntu_setup: hide the Windows (BitLocker) disk from udisks/Files/Disks\nSUBSYSTEM=="block", ENV{ID_PART_TABLE_UUID}=="%s", ENV{UDISKS_IGNORE}="1"\n' "$ptuuid" > "$tmp"
     if deploy "$tmp" /etc/udev/rules.d/99-hide-windows-disk.rules; then
         run udevadm control --reload-rules
         run udevadm trigger --subsystem-match=block --action=change
