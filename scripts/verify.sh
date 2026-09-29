@@ -134,7 +134,7 @@ for f in ~/.config/fish/config.fish ~/.config/kitty/kitty.conf ~/.config/starshi
 done
 check "JetBrainsMono Nerd Font"    "fc-list | grep -q 'JetBrainsMonoNerdFont-Regular'"
 check "MesloLGLDZ Nerd Font"       "fc-list | grep -q 'MesloLGLDZNerdFont-Regular'"
-for c in fish kitty starship eza bat fd zoxide delta lazygit nvim code mise gh podman virt-manager nmap wireshark kali; do
+for c in fish kitty starship eza bat fd zoxide atuin carapace delta lazygit nvim code mise gh podman virt-manager nmap wireshark kali; do
     check "$c on PATH" "command -v $c"
 done
 check "nvim config is 26zl/nvim"   "git -C ~/.config/nvim remote get-url origin | grep -q 26zl/nvim"

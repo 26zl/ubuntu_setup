@@ -1,6 +1,9 @@
 # Homebrew formulae — only what apt does not ship (or ships too old). gh is here
-# because Ubuntu's 2.46 lags far behind.
+# because Ubuntu's 2.46 lags far behind, atuin because apt's 18.8 does, and
+# carapace is not in apt at all.
 gh
 mise
 yazi
 sops
+atuin
+carapace

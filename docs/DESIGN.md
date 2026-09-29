@@ -50,8 +50,9 @@ run halfway.
 | `docker` | opt-in (`--groups all`): docker.io + compose v2 — a root daemon and a root-equivalent group. `system/docker-daemon.json` binds published ports to 127.0.0.1 by default because Docker's own firewall rules are evaluated before ufw's; ask for `0.0.0.0:80:80` explicitly to expose a port. On this laptop it is installed. |
 
 Homebrew (`packages/brew.txt`) adds only what apt lacks or ships too old: gh
-2.101 (apt has 2.46), mise, yazi, sops. Flatpak (`packages/flatpak.txt`) carries
-the sandboxed desktop apps, installed per user without root: Discord.
+2.101 (apt has 2.46), mise, yazi, sops, atuin (apt has 18.8), carapace. Flatpak
+(`packages/flatpak.txt`) carries the sandboxed desktop apps, installed per user
+without root: Discord.
 
 ## Debloat
 
@@ -377,13 +378,17 @@ tunnels. `fwupd` for firmware, `mokutil --sb-state` for Secure Boot.
   (`Ctrl+A` is the shell's beginning-of-line, select all in Ptyxis is
   `Ctrl+Shift+A`, kitty has no select-all); **Ptyxis** (Ubuntu's default, `Ctrl+Alt+T`) gets
   the same Nord palette, font and fish.
-- **fish** is the interactive shell inside the terminals; **bash stays the login
-  shell** (Ubuntu's `~/.bashrc` is untouched and sources `~/.config/bash/bashrc`).
+- **fish** is the interactive shell everywhere; **bash stays the login shell**
+  (Ubuntu's `~/.bashrc` is untouched and sources `~/.config/bash/bashrc`, which
+  hands interactive sessions such as VS Code and SSH over to fish).
 - **Fonts**: JetBrainsMono Nerd Font (terminals, GNOME monospace) and MesloLGLDZ
   Nerd Font (VS Code), nerd-fonts v3.5.1, SHA-256 pinned, installed to
   `~/.local/share/fonts`.
 - **Starship** Nord prompt, **fastfetch** Nord config, `eza`/`bat`/`fd`/`fzf`/
   `zoxide`/`delta`/`lazygit`/`yazi` (`ya` cd-on-exit), `direnv`, `mise`, `tldr`.
+  **atuin** takes Ctrl+R (history with directory, exit code and duration; the Up
+  arrow and its AI key stay off, sync only after `atuin login`), and
+  **carapace** completes the commands fish and bash have no completer for.
   Ubuntu names `bat` and `fd` `batcat`/`fdfind`; `apply-user.sh` links the
   upstream names into `~/.local/bin` so the configs and nvim's Telescope work.
 - **GNOME 50**: `apply-gnome.sh` validates every key against the installed
@@ -466,7 +471,7 @@ the `performance` profile with suspend off, masking CUPS (franckferman).
 | [lockdown.sh](https://github.com/dolegi/lockdown.sh), [franckferman/ubuntu-post-install](https://github.com/franckferman/ubuntu-post-install), [webpro/awesome-dotfiles](https://github.com/webpro/awesome-dotfiles) | reviewed, nothing copied (see above) |
 | [26zl/nvim](https://github.com/26zl/nvim), [26zl/vscode_config](https://github.com/26zl/vscode_config), [26zl/cybersec-toolkit](https://github.com/26zl/cybersec-toolkit) | editor configs; the opt-in security toolkit |
 | Vendor apt repos: [VS Code](https://code.visualstudio.com/docs/setup/linux), [Mullvad](https://mullvad.net/en/download/vpn/linux), [Tailscale](https://tailscale.com/kb/1275/install-ubuntu-2404), [Google Chrome](https://www.google.com/linuxrepositories/) | deb822 sources and the signing keys (fingerprints above) |
-| [Flathub](https://flathub.org) (`com.discordapp.Discord`), [Homebrew on Linux](https://docs.brew.sh/Homebrew-on-Linux), [mise](https://mise.jdx.dev), [rustup](https://rustup.rs) | Discord; gh, mise, yazi, sops; Node and uv; Rust |
+| [Flathub](https://flathub.org) (`com.discordapp.Discord`), [Homebrew on Linux](https://docs.brew.sh/Homebrew-on-Linux), [mise](https://mise.jdx.dev), [rustup](https://rustup.rs) | Discord; gh, mise, yazi, sops, atuin, carapace; Node and uv; Rust |
 | [Kali Linux image](https://hub.docker.com/r/kalilinux/kali-rolling) | the `kali` helper's base image |
 | [virtio-win](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/) (Fedora), [virt-install](https://virt-manager.org) | Windows 11 guest drivers and the VM definition |
 | [cryptsetup FAQ 5.19](https://gitlab.com/cryptsetup/cryptsetup/-/wikis/FrequentlyAskedQuestions) | the TRIM-through-LUKS trade-off |

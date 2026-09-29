@@ -69,4 +69,12 @@ command -v mise >/dev/null && eval "$(mise activate bash)"
 command -v direnv >/dev/null && eval "$(direnv hook bash)"
 command -v zoxide >/dev/null && eval "$(zoxide init bash)"
 command -v fzf >/dev/null && eval "$(fzf --bash)"
+command -v atuin >/dev/null && eval "$(atuin init bash --disable-up-arrow --disable-ai)"
+# carapace completes only what bash-completion has no completer for
+if command -v carapace >/dev/null; then
+  mapfile -t own < <(find /usr/share/bash-completion/completions ~/.local/share/bash-completion/completions -maxdepth 1 -type f -printf '%f\n' 2>/dev/null)
+  # shellcheck source=/dev/null
+  source <(IFS=,; CARAPACE_EXCLUDES="${own[*]}" carapace _carapace bash)
+  unset own
+fi
 command -v starship >/dev/null && eval "$(starship init bash)"

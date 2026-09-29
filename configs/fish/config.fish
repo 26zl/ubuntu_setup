@@ -60,6 +60,13 @@ command -q mise; and mise activate fish | source
 command -q direnv; and direnv hook fish | source
 command -q zoxide; and zoxide init fish | source
 command -q fzf; and fzf --fish | source
+# atuin — history search on Ctrl+R (after fzf, so it takes over that key);
+# the Up arrow stays fish's own and the Atuin AI key is off
+command -q atuin; and atuin init fish --disable-up-arrow --disable-ai | source
+# carapace — completions for commands fish has none for; fish keeps its own
+if command -q carapace
+    CARAPACE_EXCLUDES=(string join , (path basename -E $fish_complete_path/*.fish)) carapace _carapace fish | source
+end
 command -q starship; and starship init fish | source
 
 # VS Code sets up its shell integration only for the shell it starts itself;
