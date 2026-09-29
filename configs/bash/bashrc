@@ -1,9 +1,17 @@
 # ~/.config/bash/bashrc — sourced from ~/.bashrc (apply-user.sh adds the line).
 # Ubuntu's stock ~/.bashrc keeps its prompt and completion defaults; this adds
 # the aliases and tool hooks, each guarded so a missing tool stays silent.
-# fish is the interactive shell in kitty; bash stays the login shell.
+# fish is the interactive shell everywhere; bash stays the login shell.
 
 [[ $- == *i* ]] || return
+
+# Hand interactive terminals that start bash (VS Code, SSH, a plain terminal)
+# over to fish. Bash started from fish, `bash -ic` and nested shells stay bash.
+if command -v fish >/dev/null && [[ -z ${BASH_EXECUTION_STRING:-} ]] &&
+  [[ $(ps -o comm= -p "$PPID" 2>/dev/null) != fish ]]; then
+  shopt -q login_shell && exec fish --login
+  exec fish
+fi
 
 export PATH="$HOME/.local/bin:$PATH"
 

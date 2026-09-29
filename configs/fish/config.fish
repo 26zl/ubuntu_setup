@@ -61,3 +61,9 @@ command -q direnv; and direnv hook fish | source
 command -q zoxide; and zoxide init fish | source
 command -q fzf; and fzf --fish | source
 command -q starship; and starship init fish | source
+
+# VS Code sets up its shell integration only for the shell it starts itself;
+# here that is bash handing over to fish, so load it for fish explicitly.
+if string match -q "$TERM_PROGRAM" vscode; and command -q code
+    source (code --locate-shell-integration-path fish)
+end
