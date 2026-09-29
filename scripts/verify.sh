@@ -117,6 +117,7 @@ if [ -f /sys/class/power_supply/BAT0/charge_control_end_threshold ]; then
 fi
 check "Wi-Fi power save on"        "iw dev \$(iw dev | awk '/Interface/{print \$2; exit}') get power_save | grep -q on"
 check "audio power save (HDA power_save=1 or SOF runtime PM)" audio_power_save
+check "Caffeine enabled"           "gsettings get org.gnome.shell enabled-extensions | grep -q caffeine@patapon.info"
 check "GNOME: suspend on battery after idle" "[ \"\$(gsettings get org.gnome.settings-daemon.plugins.power sleep-inactive-battery-timeout)\" != 0 ]"
 
 section "Snapshots and updates"

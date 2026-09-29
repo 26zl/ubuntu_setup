@@ -67,6 +67,16 @@ gset org.gnome.system.location enabled false
 # affiliate tag) to every search; disabled-extensions overrides the ones the
 # ubuntu session mode enables
 gset org.gnome.shell disabled-extensions "['snapd-search-provider@canonical.com', 'web-search-provider@ubuntu.com']"
+# Caffeine, once apply-user.sh has installed it: appended to the enabled list
+# so the extensions the session already runs stay on
+if [ -f "$HOME/.local/share/gnome-shell/extensions/caffeine@patapon.info/metadata.json" ]; then
+    enabled=$(gsettings get org.gnome.shell enabled-extensions)
+    case "$enabled" in
+        *"'caffeine@patapon.info'"*) ok "Caffeine enabled" ;;
+        "@as []"|"[]") gset org.gnome.shell enabled-extensions "['caffeine@patapon.info']" ;;
+        *) gset org.gnome.shell enabled-extensions "${enabled%]}, 'caffeine@patapon.info']" ;;
+    esac
+fi
 
 # region: English UI, Norwegian formats (needs nb_NO.UTF-8 from apply-system.sh)
 if locale -a 2>/dev/null | grep -i '^nb_NO.utf8$' >/dev/null; then

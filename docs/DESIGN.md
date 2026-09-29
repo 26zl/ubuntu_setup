@@ -208,6 +208,12 @@ rather than replaced:
   UPower stores the choice in `/var/lib/upower/charging-threshold-status` and
   re-applies it at boot. Turn it off before a long day away from the charger.
   The threshold lives in the embedded controller, so it applies to Windows too.
+- **Caffeine** (GNOME extension, GPL-2.0) keeps the machine awake from Quick
+  Settings, indefinitely or on a timer, the PowerToys Awake of GNOME. Pinned
+  extensions.gnome.org build of v60 with a SHA-256 check, installed per user by
+  `apply-user.sh` and added to `enabled-extensions` by `apply-gnome.sh`; it
+  loads at the next login. Closing the lid still suspends; for that,
+  `systemd-inhibit --what=handle-lid-switch:idle:sleep <command>`.
 - Wi-Fi power saving (NetworkManager default), HDA codec power save and USB
   autosuspend are on by default; PCIe ASPM stays at the firmware default.
   `sudo powertop` measures, but `--auto-tune` is deliberately not applied:
@@ -467,6 +473,7 @@ the `performance` profile with suspend off, masking CUPS (franckferman).
 | [Claude Code sandboxing](https://code.claude.com/docs/en/sandboxing) | `configs/claude/settings.sandbox.json` |
 | [nerd-fonts v3.5.1](https://github.com/ryanoasis/nerd-fonts/releases/tag/v3.5.1) | fonts and their SHA-256 |
 | [Nordzy-icon 1.8.7](https://github.com/MolassesLover/Nordzy-icon), [Nordzy-cursors v2.4.0](https://github.com/guillaumeboehm/Nordzy-cursors) | icon and cursor theme |
+| [Caffeine v60](https://github.com/eonpatapon/gnome-shell-extension-caffeine) ([extensions.gnome.org](https://extensions.gnome.org/extension/517/caffeine/)) | keep-awake toggle and its SHA-256 |
 | [omakub](https://github.com/omacom/omakub), [konstruktoid/hardening](https://github.com/konstruktoid/hardening), [linutil](https://github.com/ChrisTitusTech/linutil) | btop theme and GNOME keys; motd-news, wsdd; TRIM |
 | [lockdown.sh](https://github.com/dolegi/lockdown.sh), [franckferman/ubuntu-post-install](https://github.com/franckferman/ubuntu-post-install), [webpro/awesome-dotfiles](https://github.com/webpro/awesome-dotfiles) | reviewed, nothing copied (see above) |
 | [26zl/nvim](https://github.com/26zl/nvim), [26zl/vscode_config](https://github.com/26zl/vscode_config), [26zl/cybersec-toolkit](https://github.com/26zl/cybersec-toolkit) | editor configs; the opt-in security toolkit |

@@ -196,6 +196,24 @@ else
     info "no battery charge thresholds on this machine"
 fi
 
+# Caffeine (GPL-2.0, github.com/eonpatapon/gnome-shell-extension-caffeine) keeps
+# the machine awake from Quick Settings, like PowerToys Awake. Pinned
+# extensions.gnome.org build of v60 (GNOME 45-50); apply-gnome.sh enables it.
+caffeine="$HOME/.local/share/gnome-shell/extensions/caffeine@patapon.info"
+if [ -f "$caffeine/metadata.json" ]; then
+    ok "Caffeine present"
+elif ! command -v gnome-extensions >/dev/null; then
+    info "gnome-extensions not found; skipping Caffeine"
+elif [ "$DRY" -eq 1 ]; then
+    echo "  [dry] install Caffeine v60 from extensions.gnome.org"
+else
+    dl=$(mktemp -d)
+    fetch "https://extensions.gnome.org/download-extension/caffeine@patapon.info.shell-extension.zip?version_tag=69851" \
+        dd2b5962ebad4e957390522e5df539764828011032360743e77cc5940ebac955 "$dl/caffeine.zip"
+    gnome-extensions install --force "$dl/caffeine.zip" && ok "Caffeine installed (loads at the next login)"
+    rm -rf "$dl"
+fi
+
 section "Flatpak apps (packages/flatpak.txt)"
 if command -v flatpak >/dev/null; then
     # user installs need no root and no polkit prompt; the system remote stays for later
