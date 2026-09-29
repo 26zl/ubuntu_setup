@@ -68,7 +68,7 @@ pinned releases, seeds the btop theme, installs the Homebrew formulae
 stable, the Podman user socket and the Kali image, the battery charge limit
 (75–80 %), Flatpak Discord, the `26zl/nvim` and `26zl/vscode_config` repos,
 GNOME settings through `apply-gnome.sh` (dark Nord look, privacy toggles,
-`nb_NO` formats, floating dock with four favourites, kitty on Super+Return) and
+`nb_NO` formats, floating dock with eight favourites, kitty on Super+Return) and
 the git identity from the gh account (`setup-github.sh`).
 
 ## Adapt it to your machine
@@ -85,7 +85,7 @@ Opinionated — what to change, and where:
 | --- | --- |
 | Editor configs: `26zl/nvim` is cloned to `~/.config/nvim` (an existing config is kept as `.bak-<stamp>`), `26zl/vscode_config` to `~/.local/share/vscode_config` | `scripts/apply-user.sh`, sections "Neovim config" and "VS Code config": point them at your repos or delete them |
 | Norwegian formats (`nb_NO.UTF-8`; the keyboard layout is left as installed) | `scripts/apply-system.sh` "Locale and terminal" (`locale-gen`) and `scripts/apply-gnome.sh` "region" |
-| The four dock favourites (kitty, Chrome, Discord, VS Code) | `scripts/apply-gnome.sh`, the `for alts in …` list |
+| The dock favourites (kitty, Chrome, Files, Discord, VS Code, Text Editor, App Center, Settings) | `scripts/apply-gnome.sh`, the `for alts in …` list |
 | The Nord look, kitty + fish, Nerd Fonts, Nordzy icons and cursor | `scripts/apply-gnome.sh` "look", `scripts/apply-user.sh` "Nerd Fonts" and "Nordzy", the files in `configs/` |
 | Tools: `packages/apt.txt` groups, `packages/brew.txt`, `packages/flatpak.txt` | pick groups at run time (`--groups base,desktop,dev`) instead of editing. The vendor repos are added whatever groups you pick |
 | `verify-setup` expects all of the above (the nvim remote, Discord, Nordzy, the btop theme, `nb_NO`) | `scripts/verify.sh`: adjust the checks for what you changed, or they report `!` |

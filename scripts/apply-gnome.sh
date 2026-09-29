@@ -128,10 +128,13 @@ gset org.gnome.shell.extensions.dash-to-dock show-trash false
 gset org.gnome.shell.extensions.dash-to-dock show-show-apps-button true
 gset org.gnome.shell.extensions.dash-to-dock dash-max-icon-size 48
 # favourites: the first existing alternative per app (a|b), flatpak exports included;
+# App Center is the snap-store snap, whose entry keeps the old snap-store_ name;
 # VS Code renamed its entry to com.microsoft.VSCode.desktop in 2026, Chrome's
 # visible entry is still google-chrome.desktop (com.google.Chrome is NoDisplay)
 favs=()
-for alts in kitty.desktop google-chrome.desktop com.discordapp.Discord.desktop "com.microsoft.VSCode.desktop|code.desktop"; do
+for alts in kitty.desktop google-chrome.desktop org.gnome.Nautilus.desktop com.discordapp.Discord.desktop \
+            "com.microsoft.VSCode.desktop|code.desktop" org.gnome.TextEditor.desktop \
+            "snap-store_snap-store.desktop|app-center_app-center.desktop" org.gnome.Settings.desktop; do
     IFS='|' read -ra names <<<"$alts"
     for d in "${names[@]}"; do
         found=0
