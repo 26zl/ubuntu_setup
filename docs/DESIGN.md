@@ -358,8 +358,9 @@ tunnels. `fwupd` for firmware, `mokutil --sb-state` for Secure Boot.
   (plugins synced headless during setup). **VS Code** from Microsoft's repo with
   [26zl/vscode_config](https://github.com/26zl/vscode_config) cloned to
   `~/.local/share/vscode_config`; its `install.sh` symlinks `settings.json` and
-  installs the `core`, `ops`, `security` and `fullstack` extension groups
-  (publisher allow-list, delayed updates, telemetry off).
+  installs the `sysadmin` role, the `core`, `k8s` and `ops` extension groups
+  (publisher allow-list, delayed updates, telemetry off);
+  `VSCODE_ROLE=cybersec` or `fullstack` picks another role.
 - **Runtimes**: Node LTS and `uv` through `mise` (`mise use -g node@22` to pin;
   `corepack enable` for pnpm/yarn); Go 1.26 and OpenJDK 21 from apt; Rust via
   `rustup` (`stable`, minimal profile + rustfmt + clippy); Python 3.14 + `uv`.

@@ -243,12 +243,14 @@ if [ -d "$vcdir/.git" ]; then
 else
     run git clone -q https://github.com/26zl/vscode_config "$vcdir" && ok "cloned to $vcdir"
 fi
+# VSCODE_ROLE picks another vscode_config role: cybersec or fullstack.
+vcrole="${VSCODE_ROLE:-sysadmin}"
 if ! command -v code >/dev/null; then
     warn "code not installed; run apply-system.sh first"
 elif [ "$DRY" -eq 1 ]; then
-    echo "  [dry] $vcdir/install.sh --groups core,ops,security,fullstack"
-elif (cd "$vcdir" && ./install.sh --groups core,ops,security,fullstack >/tmp/vscode-install.log 2>&1); then
-    ok "settings linked + extensions: core, ops, security, fullstack"
+    echo "  [dry] $vcdir/install.sh --role $vcrole"
+elif (cd "$vcdir" && ./install.sh --role "$vcrole" >/tmp/vscode-install.log 2>&1); then
+    ok "settings linked + extensions: role $vcrole"
 else
     warn "extension install failed (see /tmp/vscode-install.log); linking settings only"
     (cd "$vcdir" && ./install.sh --no-ext >/dev/null 2>&1) && ok "settings linked"
