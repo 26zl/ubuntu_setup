@@ -234,7 +234,10 @@ if command -v nvim >/dev/null; then
 fi
 
 section "VS Code config (github.com/26zl/vscode_config)"
-vcdir="$HOME/.local/share/vscode_config"
+# Reuse the clone settings.json already links to, so a moved clone stays put.
+vclink="$(readlink -f "$HOME/.config/Code/User/settings.json" 2>/dev/null || true)"
+vcdir="${vclink%/settings.json}"
+[ -d "$vcdir/.git" ] || vcdir="$HOME/.local/share/vscode_config"
 if [ -d "$vcdir/.git" ]; then
     run git -C "$vcdir" pull -q --autostash --ff-only && ok "vscode_config up to date"
 else

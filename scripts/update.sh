@@ -30,7 +30,9 @@ section "Editor configs"
 if [ -d ~/.config/nvim/.git ]; then
     git -C ~/.config/nvim pull -q --ff-only && nvim --headless "+Lazy! sync" +qa >/dev/null 2>&1 || true
 fi
-[ -d ~/.local/share/vscode_config/.git ] && git -C ~/.local/share/vscode_config pull -q --autostash --ff-only
+# The clone settings.json links to, wherever it lives.
+vcdir="$(dirname "$(readlink -f ~/.config/Code/User/settings.json 2>/dev/null || echo /nonexistent/x)")"
+[ -d "$vcdir/.git" ] && git -C "$vcdir" pull -q --autostash --ff-only
 
 section "Firmware"
 fwupdmgr refresh --force >/dev/null 2>&1 || true
