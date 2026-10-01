@@ -68,7 +68,9 @@ jobs:
           missing=0
           for f in $(find configs -type f); do
             base=$(basename "$f")
-            grep -qF "$base" scripts/apply-user.sh || { echo "NOT LINKED by apply-user.sh: $f"; missing=1; }
+            # a file counts as linked by name, or through its linked directory
+            grep -qF "$base" scripts/apply-user.sh || grep -qF "$(dirname "$f")" scripts/apply-user.sh ||
+              { echo "NOT LINKED by apply-user.sh: $f"; missing=1; }
           done
           exit $missing
 

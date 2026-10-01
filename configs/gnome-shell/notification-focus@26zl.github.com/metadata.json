@@ -1,0 +1,7 @@
+{
+  "uuid": "notification-focus@26zl.github.com",
+  "name": "Notification focus",
+  "description": "Clicking a notification brings its app to the front, also when the app ignores the activation token (Flatpak and snap apps, terminals, scripts).",
+  "shell-version": ["50"],
+  "url": "https://github.com/26zl/ubuntu_setup"
+}

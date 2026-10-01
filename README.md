@@ -136,7 +136,7 @@ configs alias `cat` to `bat` and `ls` to `eza`.
 ## Repository layout
 
 ```text
-├── configs/     user dotfiles, symlinked by apply-user.sh (fish, kitty, starship, git, ssh, mise, bin/kali, …)
+├── configs/     user dotfiles, symlinked by apply-user.sh (fish, kitty, starship, git, ssh, mise, bin/kali, the notification-focus GNOME extension, …)
 ├── system/      files deployed to /etc by apply-system.sh (sysctl, GRUB, modprobe, resolved, NetworkManager, sudo, journald, browser policies, apt sources)
 ├── packages/    apt.txt (grouped), brew.txt, flatpak.txt
 ├── scripts/     ubuntu-setup.sh, apply-system.sh, apply-user.sh, apply-gnome.sh, verify.sh, sysinfo.sh, update.sh, setup-github.sh, new-windows-vm.sh

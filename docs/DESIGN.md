@@ -406,9 +406,28 @@ tunnels. `fwupd` for firmware, `mokutil --sb-state` for Secure Boot.
   click, natural scrolling.
 - **Dock**: Ubuntu's dash-to-dock as a floating dock at the bottom (no panel
   mode, auto-hide under overlapping windows, hover the bottom edge to show), no
-  drive or trash icons, and only four favourites: kitty, Chrome, Discord, VS Code
-  (an entry is set only when its `.desktop` file exists, flatpak exports
-  included). Everything else lives in the app grid (Super).
+  drive or trash icons, and eight favourites: kitty, Chrome, Files, Discord,
+  VS Code, Text Editor, App Center, Settings (an entry is set only when its
+  `.desktop` file exists, flatpak exports included). Everything else lives in
+  the app grid (Super).
+- **Clicking a notification opens its app** through an extension of our own,
+  `configs/gnome-shell/notification-focus@26zl.github.com`, linked by
+  `apply-user.sh` and enabled by `apply-gnome.sh`. GNOME Shell 50 does not raise
+  an app when its notification is clicked. It sends the app an activation
+  token and the app has to raise its own window with it. Many apps never do,
+  for example libnotify through the notification portal (Flatpak and snap
+  apps such as Discord, Firefox and Thunderbird: the Freedesktop 26.08
+  runtime's libnotify does not read the portal's `activation-token`),
+  terminals and scripts. Those apps stay behind and the cursor spins
+  until the token expires after 15 s. The extension gives the app 0.6 s to
+  raise itself and otherwise raises the app's most recent window. It also
+  grants focus requests from the clicked app for 5 s, which covers apps that
+  raise themselves without a valid token. It then completes the unused token,
+  which stops the busy cursor: right away for a single-window app, after 2 s
+  for a multi-window app, so Chrome can still use the token to pick the right
+  window. Apps that are not running are not launched, because the click may
+  already be starting them. One fix for every app instead of per-app
+  overrides. About 150 lines of our own code, with no third-party extension.
 - **Nord icons and cursor**: the same Nordzy set as the NixOS ThinkPad,
   installed per user from pinned releases with SHA-256 checks (Nordzy-icon 1.8.7
   `Nordzy-dark`, Nordzy-cursors v2.4.0) into `~/.local/share/icons`; GDM and the

@@ -63,6 +63,8 @@ link configs/mise/config.toml        "$HOME/.config/mise/config.toml"
 link configs/containers/registries.conf "$HOME/.config/containers/registries.conf"
 link configs/xdg-terminals.list      "$HOME/.config/xdg-terminals.list"
 link configs/bash/bashrc             "$HOME/.config/bash/bashrc"
+link configs/gnome-shell/notification-focus@26zl.github.com \
+    "$HOME/.local/share/gnome-shell/extensions/notification-focus@26zl.github.com"
 [ -d "$HOME/.ssh" ] || run mkdir -p "$HOME/.ssh"
 [ "$(stat -c %a "$HOME/.ssh" 2>/dev/null)" = 700 ] || run chmod 700 "$HOME/.ssh"
 link configs/ssh/config              "$HOME/.ssh/config"
