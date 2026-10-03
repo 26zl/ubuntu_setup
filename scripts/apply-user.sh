@@ -26,7 +26,8 @@ while [ "$#" -gt 0 ]; do
     esac
     shift
 done
-run() { if [ "$DRY" -eq 1 ]; then echo "  [dry] $*"; else "$@"; fi; }
+exec 3>&1  # the dry-run plan goes to the terminal even where a command's output is discarded
+run() { if [ "$DRY" -eq 1 ]; then echo "  [dry] $*" >&3; else "$@"; fi; }
 
 if [ "$EUID" -eq 0 ]; then
     echo "ERROR: run without sudo, as your normal user." >&2
@@ -145,7 +146,7 @@ if command -v brew >/dev/null; then
     if [ "${#todo[@]}" -gt 0 ]; then run env HOMEBREW_NO_AUTO_UPDATE=1 brew install -q "${todo[@]}"; fi
     ok "brew: ${formulae[*]}"
 else
-    warn "Homebrew not installed; skipping gh/mise/yazi/sops (https://brew.sh — optional; apt's gh 2.46 works too)"
+    warn "Homebrew not installed; skipping packages/brew.txt (https://brew.sh — optional; apt's gh 2.46 works too)"
 fi
 
 section "Toolchains"
@@ -219,17 +220,20 @@ fi
 section "Flatpak apps (packages/flatpak.txt)"
 if command -v flatpak >/dev/null; then
     # user installs need no root and no polkit prompt; the system remote stays for later
-    run flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-    mapfile -t apps < <(grep -vE '^\s*(#|$)' packages/flatpak.txt)
-    for app in "${apps[@]}"; do
-        if flatpak info --user "$app" >/dev/null 2>&1; then
-            ok "$app already installed"
-        elif run flatpak install --user -y --noninteractive flathub "$app"; then
-            ok "$app installed (user)"
-        else
-            warn "$app did not install (offline?); re-run later"
-        fi
-    done
+    if run flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo; then
+        mapfile -t apps < <(grep -vE '^\s*(#|$)' packages/flatpak.txt)
+        for app in "${apps[@]}"; do
+            if flatpak info --user "$app" >/dev/null 2>&1; then
+                ok "$app already installed"
+            elif run flatpak install --user -y --noninteractive flathub "$app"; then
+                ok "$app installed (user)"
+            else
+                warn "$app did not install (offline?); re-run later"
+            fi
+        done
+    else
+        warn "Flathub remote not added (offline?); re-run later"
+    fi
 else
     warn "flatpak not installed; run apply-system.sh first"
 fi
@@ -265,14 +269,15 @@ else
 fi
 # VSCODE_ROLE picks another vscode_config role: cybersec or fullstack.
 vcrole="${VSCODE_ROLE:-sysadmin}"
+vclog=$(mktemp -t vscode-install.XXXXXX)
 if ! command -v code >/dev/null; then
     warn "code not installed; run apply-system.sh first"
 elif [ "$DRY" -eq 1 ]; then
     echo "  [dry] $vcdir/install.sh --role $vcrole"
-elif (cd "$vcdir" && ./install.sh --role "$vcrole" >/tmp/vscode-install.log 2>&1); then
+elif (cd "$vcdir" && ./install.sh --role "$vcrole" >"$vclog" 2>&1); then
     ok "settings linked + extensions: role $vcrole"
 else
-    warn "extension install failed (see /tmp/vscode-install.log); linking settings only"
+    warn "extension install failed (see $vclog); linking settings only"
     (cd "$vcdir" && ./install.sh --no-ext >/dev/null 2>&1) && ok "settings linked"
 fi
 

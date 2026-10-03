@@ -16,7 +16,7 @@ sudo apt-get full-upgrade -y -q
 sudo apt-get autoremove --purge -y -q
 
 section "snap / flatpak"
-sudo snap refresh
+sudo snap refresh || echo "  snap refresh incomplete (an app is running?)"
 command -v flatpak >/dev/null && flatpak update -y --noninteractive
 
 section "Homebrew"

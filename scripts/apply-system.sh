@@ -26,14 +26,15 @@ while [ "$#" -gt 0 ]; do
         --groups) shift; GROUPS_WANTED="${1:-}"; [ -n "$GROUPS_WANTED" ] || { echo "--groups needs a list, e.g. base,dev or all" >&2; exit 2; } ;;
         --dry-run) DRY=1 ;;
         --no-snapshot) SNAPSHOT=0 ;;
-        -h|--help) sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h|--help) sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) echo "unknown option: $1" >&2; exit 2 ;;
     esac
     shift
 done
 [ "$GROUPS_WANTED" = all ] && GROUPS_WANTED="base,desktop,dev,virt,security,vpn,media,tools,docker"
 
-run() { if [ "$DRY" -eq 1 ]; then echo "  [dry] $*"; else "$@"; fi; }
+exec 3>&1  # the dry-run plan goes to the terminal even where a command's output is discarded
+run() { if [ "$DRY" -eq 1 ]; then echo "  [dry] $*" >&3; else "$@"; fi; }
 # debconf_set "pkg question type value" — never `echo | run …`: in a dry run the
 # reader exits without reading and echo can die of SIGPIPE (exit 141 under pipefail)
 debconf_set() { if [ "$DRY" -eq 1 ]; then echo "  [dry] debconf-set-selections: $1"; else echo "$1" | debconf-set-selections; fi; }
@@ -65,7 +66,7 @@ APT_OPTS=(-y -q -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-co
 deploy() {
     local src=$1 dst=$2 mode=${3:-0644}
     if cmp -s "$src" "$dst"; then return 1; fi
-    run install -D -m "$mode" "$src" "$dst"
+    run install -D -m "$mode" "$src" "$dst" || { warn "install failed: $dst"; return 2; }
     ok "$dst"
 }
 
@@ -218,14 +219,13 @@ fi
 # motd-news fetches motd.ubuntu.com daily with release/kernel/CPU/uptime in the
 # User-Agent; Pro's apt_news pulls the same feed on every apt run
 deploy system/motd-news /etc/default/motd-news || true
-if command -v pro >/dev/null && pro config show apt_news 2>/dev/null | grep -q True; then
+if command -v pro >/dev/null && pro config show apt_news 2>/dev/null | grep True >/dev/null; then
     run pro config set apt_news=false && ok "pro: apt_news=false"
 fi
 for u in apport.service avahi-daemon.socket avahi-daemon.service cups-browsed.service ModemManager.service motd-news.timer; do
     unit_exists "$u" || continue
     if [ "$(systemctl is-enabled "$u" 2>/dev/null)" != disabled ] || systemctl is-active --quiet "$u"; then
-        run systemctl disable --now "$u" >/dev/null 2>&1 || true
-        ok "disabled $u"
+        if run systemctl disable --now "$u" >/dev/null 2>&1; then ok "disabled $u"; else warn "could not disable $u"; fi
     fi
 done
 info "avahi: no mDNS announcements on untrusted networks (add printers by address); cups-browsed: CVE-2024-47176 class; ModemManager: no WWAN in this model"
@@ -262,6 +262,7 @@ else
     warn "system/sudo-hardening failed visudo -c; not installed"
 fi
 deploy system/apt-unattended-local.conf /etc/apt/apt.conf.d/52unattended-upgrades-local || true
+if deploy system/apt-daily-upgrade-battery.conf /etc/systemd/system/apt-daily-upgrade.service.d/battery.conf; then run systemctl daemon-reload; fi
 ok "sysctl, modprobe, GRUB, resolved, NetworkManager, coredump, journald, sudo, unattended-upgrades"
 
 section "Browser policies"
@@ -275,10 +276,8 @@ section "Firewall (ufw)"
 run ufw default deny incoming
 run ufw default allow outgoing
 run ufw default deny routed
-# earlier versions opened every host port to VMs (allow in on virbr0) and to the
-# tailnet (allow in on tailscale0): drop those before the narrower rules go in.
-# `ufw status` prints inbound rules as "Anywhere on virbr0  ALLOW  Anywhere"
-# (the IN only appears with --verbose); the delete removes the v6 twin too
+# drop any blanket allow-in rule on virbr0/tailscale0 before the narrower rules
+# go in (`ufw status` omits IN without --verbose; the delete removes the v6 twin)
 ufw_has() { ufw status 2>/dev/null | grep -E "$1" >/dev/null; }
 ufw_has '^Anywhere on virbr0 +ALLOW( IN)? +Anywhere' && run ufw delete allow in on virbr0
 ufw_has '^Anywhere on tailscale0 +ALLOW( IN)? +Anywhere' && run ufw delete allow in on tailscale0
@@ -328,11 +327,9 @@ if [[ ",$GROUPS_WANTED," == *,docker,* ]]; then
     fi
     ok "docker: daemon.json (ports bind to 127.0.0.1 by default, live-restore)"
 fi
-# docker.io replaces the podman-docker shim, but a removed package keeps its
-# conffiles: /etc/profile.d/podman-docker.sh then exports DOCKER_HOST=<podman
-# socket> into every login shell and the GNOME session, and `docker` quietly
-# talks to Podman. Purged by name: its only conffiles are the two profile.d
-# hooks, shared with nothing (this is not the blanket rc purge avoided above)
+# a removed podman-docker leaves /etc/profile.d/podman-docker.sh pointing
+# DOCKER_HOST at Podman; purge it by name (its only conffiles are the two
+# profile.d hooks, so this is not the blanket rc purge avoided above)
 if installed docker.io && dpkg-query -W -f='${Status}' podman-docker 2>/dev/null | grep 'config-files' >/dev/null; then
     run dpkg --purge podman-docker
     ok "podman-docker leftovers purged (its profile.d hook sent docker to Podman); log out and in"
@@ -348,7 +345,7 @@ section "Storage (TRIM through LUKS)"
 # reveals which blocks of the encrypted volume are free; the installer's own
 # default layouts accept that trade for SSD life and performance.
 if grep -qE '^[^#].*\bluks\b' /etc/crypttab 2>/dev/null && ! grep -qE '^[^#].*\bdiscard\b' /etc/crypttab; then
-    run sed -i -E '/^[^#]/ s/\bluks\b/luks,discard/' /etc/crypttab
+    run sed -i -E '/^[^#]/ s/^(([^[:space:]]+[[:space:]]+){3}[^[:space:]]*)\bluks\b/\1luks,discard/' /etc/crypttab
     run update-initramfs -u >/dev/null 2>&1 || warn "update-initramfs failed; run it by hand"
     reboot_needed=1
     ok "/etc/crypttab: discard added (active after reboot, then fstrim.timer works)"
@@ -373,14 +370,11 @@ if [ -n "$windisk" ]; then
     fi
     rm -f "$tmp"
     ok "/dev/$windisk (GPT $ptuuid) hidden from Files and Disks"
-    # --- dual boot with that Windows ---
-    # 1. Hardware clock in local time: Windows reads the RTC as local time and
-    #    its own time sync at boot is unreliable, so Ubuntu gives in (same as
-    #    time.hardwareClockInLocalTime in the NixOS config). No
-    #    --adjust-system-clock: the system clock is NTP-synced and correct, so
-    #    the RTC is rewritten from it; the flag would do the opposite and set the
-    #    system clock wrong by the UTC offset until NTP catches up. timedatectl's
-    #    warning is expected: around a DST change one boot can be an hour off.
+    # dual boot with that Windows
+    # 1. RTC in local time, as Windows expects. No --adjust-system-clock: the RTC
+    #    is written from the NTP-synced system clock, the flag would do the
+    #    reverse. timedatectl's warning is expected (an hour off for one boot
+    #    around a DST change).
     if [ "$(timedatectl show -p LocalRTC --value 2>/dev/null)" != yes ]; then
         if run timedatectl set-local-rtc 1 2>/dev/null; then ok "RTC kept in local time (timedatectl set-local-rtc 1)"; else warn "timedatectl set-local-rtc 1 failed"; fi
     fi
@@ -410,8 +404,7 @@ fi
 if [ -x /usr/bin/kitty ] && update-alternatives --query x-terminal-emulator 2>/dev/null | grep '^Value: /usr/bin/kitty' >/dev/null; then
     :
 elif [ -x /usr/bin/kitty ]; then
-    run update-alternatives --set x-terminal-emulator /usr/bin/kitty >/dev/null 2>&1 || true
-    ok "x-terminal-emulator -> kitty"
+    if run update-alternatives --set x-terminal-emulator /usr/bin/kitty >/dev/null 2>&1; then ok "x-terminal-emulator -> kitty"; else warn "kitty is not registered as an x-terminal-emulator alternative"; fi
 fi
 
 section "Snap app permissions (prompting)"

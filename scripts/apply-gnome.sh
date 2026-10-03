@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # GNOME 50 settings: Nord-ish look, Nerd Font terminals running fish, privacy
-# toggles, Norwegian formats, a floating dock with four favourites, kitty on
+# toggles, Norwegian formats, a floating dock with eight favourites, kitty on
 # Super+Return. Every key is checked against the installed schemas first, so a
 # renamed key warns instead of failing.
 #   bash scripts/apply-gnome.sh [--dry-run]     # as your user, from the desktop
@@ -65,8 +65,15 @@ gset org.gnome.system.location enabled false
 # the snap-store search provider sends every overview search term to the Snap
 # Store and the web-search provider adds a Google row (with Canonical's
 # affiliate tag) to every search; disabled-extensions overrides the ones the
-# ubuntu session mode enables
-gset org.gnome.shell disabled-extensions "['snapd-search-provider@canonical.com', 'web-search-provider@ubuntu.com']"
+# ubuntu session mode enables, and is merged so extensions disabled by hand stay off
+for uuid in snapd-search-provider@canonical.com web-search-provider@ubuntu.com; do
+    disabled=$(gsettings get org.gnome.shell disabled-extensions)
+    case "$disabled" in
+        *"'$uuid'"*) ok "$uuid disabled" ;;
+        "@as []"|"[]") gset org.gnome.shell disabled-extensions "['$uuid']" ;;
+        *) gset org.gnome.shell disabled-extensions "${disabled%]}, '$uuid']" ;;
+    esac
+done
 # Caffeine (installed by apply-user.sh) and notification-focus (linked from
 # configs/gnome-shell): appended to the enabled list so the extensions the
 # session already runs stay on; new ones load at the next login
@@ -96,7 +103,7 @@ gset org.gnome.settings-daemon.plugins.power power-button-action "'interactive'"
 gset org.gnome.Ptyxis use-system-font false
 gset org.gnome.Ptyxis font-name "'JetBrainsMono Nerd Font 11'"
 gset org.gnome.Ptyxis interface-style "'dark'"
-uuid=$(gsettings get org.gnome.Ptyxis default-profile-uuid 2>/dev/null | tr -d "'")
+uuid=$(gsettings get org.gnome.Ptyxis default-profile-uuid 2>/dev/null | tr -d "'" || true)
 if [ -n "$uuid" ]; then
     profile="org.gnome.Ptyxis.Profile:/org/gnome/Ptyxis/Profiles/$uuid/"
     gset "$profile" palette "'nord'"
@@ -125,14 +132,14 @@ gset org.gnome.shell.extensions.dash-to-dock extend-height false     # floating 
 gset org.gnome.shell.extensions.dash-to-dock dock-fixed false        # hides under an overlapping window; hover the edge to show
 gset org.gnome.shell.extensions.dash-to-dock intellihide true
 gset org.gnome.shell.extensions.dash-to-dock autohide true
-gset org.gnome.shell.extensions.dash-to-dock show-mounts false       # no drive icons in the dock
+gset org.gnome.shell.extensions.dash-to-dock show-mounts false
 gset org.gnome.shell.extensions.dash-to-dock show-trash false
 gset org.gnome.shell.extensions.dash-to-dock show-show-apps-button true
 gset org.gnome.shell.extensions.dash-to-dock dash-max-icon-size 48
 # favourites: the first existing alternative per app (a|b), flatpak exports included;
 # App Center is the snap-store snap, whose entry keeps the old snap-store_ name;
-# VS Code renamed its entry to com.microsoft.VSCode.desktop in 2026, Chrome's
-# visible entry is still google-chrome.desktop (com.google.Chrome is NoDisplay)
+# VS Code's entry is com.microsoft.VSCode.desktop (code.desktop in older builds),
+# Chrome's visible entry is google-chrome.desktop (com.google.Chrome is NoDisplay)
 favs=()
 for alts in kitty.desktop google-chrome.desktop org.gnome.Nautilus.desktop com.discordapp.Discord.desktop \
             "com.microsoft.VSCode.desktop|code.desktop" org.gnome.TextEditor.desktop \

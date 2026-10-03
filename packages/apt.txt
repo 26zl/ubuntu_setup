@@ -149,7 +149,7 @@ gimp
 obs-studio
 
 [tools]
-# general quick tools, useful far beyond security work
+# general CLI and media tools
 ffmpeg
 imagemagick
 pandoc
@@ -172,11 +172,8 @@ hyperfine
 tokei
 
 [docker]
-# opt-in: a root daemon and a root-equivalent `docker` group; rootless Podman
-# with podman-docker covers the docker CLI without either. apply-system.sh
-# drops podman-docker when this group is selected (both ship /usr/bin/docker)
-# and deploys system/docker-daemon.json: published ports bind to 127.0.0.1
-# unless a container asks for 0.0.0.0 explicitly, because Docker's own
-# firewall rules bypass ufw.
+# opt-in: a root daemon and a root-equivalent `docker` group. apply-system.sh
+# drops the podman-docker shim (both ship /usr/bin/docker) and deploys
+# system/docker-daemon.json, which binds published ports to 127.0.0.1.
 docker.io
 docker-compose-v2

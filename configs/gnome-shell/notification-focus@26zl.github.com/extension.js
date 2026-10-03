@@ -1,16 +1,7 @@
-// Clicking a notification brings its app to the front.
-//
-// GNOME Shell does not raise an app when one of its notifications is clicked.
-// It hands the app an activation token, and the app has to raise its own
-// window with it. Apps that never use the token stay behind, and Mutter shows
-// the busy cursor until the token expires after 15 s. Examples are libnotify
-// through the notification portal (Flatpak and snap apps), terminals and
-// scripts. This extension gives the app a moment to raise itself. If the app
-// does not, the shell raises it and completes the unused token, which stops
-// the busy cursor.
-//
-// Only running apps are raised. Nothing is launched, because a click may
-// already be starting the app (update-notifier opens Software Updater itself).
+// Clicking a notification raises its app even when the app ignores the
+// activation token GNOME Shell hands it (portal libnotify, terminals, scripts),
+// then completes the unused token so the busy cursor stops. Only running apps
+// are raised; nothing is launched, because the click may be starting the app.
 
 import GLib from 'gi://GLib';
 import Shell from 'gi://Shell';

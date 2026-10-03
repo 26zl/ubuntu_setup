@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   validate:
+    timeout-minutes: 10
     name: Validate config files
     runs-on: ubuntu-latest
 
@@ -58,8 +59,7 @@ jobs:
         run: |
           missing=0
           for f in system/*; do
-            base=$(basename "$f")
-            grep -qF "$base" scripts/apply-system.sh || { echo "NOT DEPLOYED by apply-system.sh: $f"; missing=1; }
+            grep -qF "$f" scripts/apply-system.sh || { echo "NOT DEPLOYED by apply-system.sh: $f"; missing=1; }
           done
           exit $missing
 
@@ -67,14 +67,14 @@ jobs:
         run: |
           missing=0
           for f in $(find configs -type f); do
-            base=$(basename "$f")
-            # a file counts as linked by name, or through its linked directory
-            grep -qF "$base" scripts/apply-user.sh || grep -qF "$(dirname "$f")" scripts/apply-user.sh ||
+            # linked by its repo path, or through its linked directory
+            grep -qF "$f" scripts/apply-user.sh || grep -qF "$(dirname "$f")" scripts/apply-user.sh ||
               { echo "NOT LINKED by apply-user.sh: $f"; missing=1; }
           done
           exit $missing
 
   packages:
+    timeout-minutes: 30
     name: Ubuntu 26.04 container - dry-run the system half, resolve every apt package
     runs-on: ubuntu-latest
     container: ubuntu:26.04
@@ -90,11 +90,9 @@ jobs:
           apt-get update -q
           apt-get install -y -q curl ca-certificates gnupg sudo
 
-      # root inside the container, nothing is changed. The keyrings are absent
-      # here, so fetch() downloads the vendor keys and verifies the pinned hashes
-      # and Chrome's fingerprint for real (the weekly run catches a rotated key).
-      # Third-party packages show as "not in any enabled repo" at this point; the
-      # last step resolves them with the repos added.
+      # dry run as root: no keyrings exist yet, so the pinned key hashes and
+      # Chrome's fingerprint are verified for real (the weekly run catches a
+      # rotated key); third-party packages resolve in the last step
       - name: Dry-run the system half
         run: bash scripts/apply-system.sh --dry-run --no-snapshot --groups all
 
@@ -102,10 +100,10 @@ jobs:
         run: |
           set -e
           install -d -m 0755 /etc/apt/keyrings
-          curl -fsSL https://packages.microsoft.com/keys/microsoft.asc -o /etc/apt/keyrings/microsoft.asc
-          curl -fsSL https://repository.mullvad.net/deb/mullvad-keyring.asc -o /etc/apt/keyrings/mullvad-keyring.asc
-          curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/resolute.noarmor.gpg -o /etc/apt/keyrings/tailscale-archive-keyring.gpg
-          curl -fsSL https://dl.google.com/linux/linux_signing_key.pub -o /etc/apt/keyrings/google-chrome.asc
+          curl -fsSL --proto '=https' --tlsv1.2 https://packages.microsoft.com/keys/microsoft.asc -o /etc/apt/keyrings/microsoft.asc
+          curl -fsSL --proto '=https' --tlsv1.2 https://repository.mullvad.net/deb/mullvad-keyring.asc -o /etc/apt/keyrings/mullvad-keyring.asc
+          curl -fsSL --proto '=https' --tlsv1.2 https://pkgs.tailscale.com/stable/ubuntu/resolute.noarmor.gpg -o /etc/apt/keyrings/tailscale-archive-keyring.gpg
+          curl -fsSL --proto '=https' --tlsv1.2 https://dl.google.com/linux/linux_signing_key.pub -o /etc/apt/keyrings/google-chrome.asc
           cp system/vscode.sources system/mullvad.sources system/tailscale.sources system/google-chrome.sources /etc/apt/sources.list.d/
           apt-get update -q
 

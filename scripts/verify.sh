@@ -33,7 +33,7 @@ check "kernel: page_alloc.shuffle=1"             "grep -qw page_alloc.shuffle=1 
 check "kernel: vsyscall=none"                    "grep -qw vsyscall=none /proc/cmdline"
 check "kernel: no crashkernel reservation (after reboot)" "! grep -q 'crashkernel=' /proc/cmdline"
 check "GRUB drop-in installed"     "[ -f /etc/default/grub.d/99-hardening.cfg ]"
-check "TRIM passes through LUKS (after reboot)" "[ \"\$(lsblk -Dno DISC-GRAN \$(findmnt -no SOURCE /) | head -1 | tr -d ' ')\" != 0B ]"
+check "TRIM passes through LUKS (after reboot)" "g=\$(lsblk -Dno DISC-GRAN \$(findmnt -no SOURCE /) 2>/dev/null | head -1 | tr -d ' '); [ -n \"\$g\" ] && [ \"\$g\" != 0B ]"
 
 section "Windows disk"
 winpart=$(lsblk -rno NAME,FSTYPE 2>/dev/null | awk '$2 == "BitLocker" {print $1; exit}')
@@ -59,7 +59,7 @@ section "Network"
 check "ufw enabled at boot"        "grep -q '^ENABLED=yes' /etc/ufw/ufw.conf"
 check "ufw active"                 "systemctl is-active ufw"
 check "ufw default: deny incoming" "grep -q '^DEFAULT_INPUT_POLICY=\"DROP\"' /etc/default/ufw"
-check "resolved: DNS-over-TLS opportunistic" "resolvectl status 2>/dev/null | head -3 | grep -q '+DNSOverTLS\|DNSOverTLS=opportunistic' || grep -q '^DNSOverTLS=opportunistic' /etc/systemd/resolved.conf.d/hardening.conf"
+check "resolved: DNS-over-TLS opportunistic" "resolvectl status 2>/dev/null | head -3 | grep -q '+DNSOverTLS\|DNSOverTLS=opportunistic'"
 check "resolved: LLMNR off"        "resolvectl status | head -3 | grep -q -- '-LLMNR'"
 check "resolved: mDNS off"         "resolvectl status | head -3 | grep -q -- '-mDNS'"
 check "resolved: Quad9 fallback"   "grep -q 'dns.quad9.net' /etc/systemd/resolved.conf.d/hardening.conf"
@@ -83,6 +83,7 @@ check "GNOME: location off"        "[ \"\$(gsettings get org.gnome.system.locati
 check "Firefox policies installed" "[ -f /etc/firefox/policies/policies.json ]"
 check "Chrome policies installed"  "[ -f /etc/opt/chrome/policies/managed/privacy.json ]"
 check "unattended security upgrades on" "grep -q 'Unattended-Upgrade \"1\"' /etc/apt/apt.conf.d/20auto-upgrades"
+check "unattended upgrades run on battery too" "systemctl cat apt-daily-upgrade.service 2>/dev/null | grep -q '^ConditionACPower=$' && apt-config dump 2>/dev/null | grep -q 'Unattended-Upgrade::OnlyOnACPower \"false\"'"
 check "ClamAV signature timer enabled" "systemctl is-enabled clamav-freshclam-once.timer 2>/dev/null | grep -q '^enabled'"
 
 section "Sandboxing"
@@ -128,7 +129,7 @@ if pro status 2>/dev/null | grep -q 'not attached'; then
 else
     check "Ubuntu Pro: livepatch/esm" "pro status 2>/dev/null | grep -Eq 'livepatch +yes +enabled'"
 fi
-check "firmware: no pending updates" "! fwupdmgr get-updates 2>/dev/null | grep -q 'Update available'"
+check "firmware: no pending updates" "! fwupdmgr get-updates --json 2>/dev/null | jq -e '(.Devices // []) | length > 0'"
 
 section "Dotfiles and tools"
 for f in ~/.config/fish/config.fish ~/.config/kitty/kitty.conf ~/.config/starship.toml ~/.config/git/config ~/.ssh/config ~/.config/mise/config.toml; do

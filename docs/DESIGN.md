@@ -47,7 +47,7 @@ run halfway.
 | `vpn` | Mullvad VPN, Tailscale |
 | `media` | VLC, GIMP, OBS Studio (apt reuses the Qt/GTK libraries already installed; the Flathub builds would add three runtimes, ~2 GB) |
 | `tools` | general quick tools: ffmpeg, ImageMagick, pandoc, poppler-utils, qrencode + zbar, moreutils, pv, parallel, entr, fdupes, trash-cli, sshfs, cifs-utils, testdisk, speedtest-cli, testssl.sh, magic-wormhole, hyperfine, tokei |
-| `docker` | opt-in (`--groups all`): docker.io + compose v2 — a root daemon and a root-equivalent group. `system/docker-daemon.json` binds published ports to 127.0.0.1 by default because Docker's own firewall rules are evaluated before ufw's; ask for `0.0.0.0:80:80` explicitly to expose a port. On this laptop it is installed. |
+| `docker` | opt-in (`--groups all`): docker.io + compose v2 — a root daemon and a root-equivalent group. `system/docker-daemon.json` binds published ports to 127.0.0.1 by default because Docker's own firewall rules are evaluated before ufw's; ask for `0.0.0.0:80:80` explicitly to expose a port. |
 
 Homebrew (`packages/brew.txt`) adds only what apt lacks or ships too old: gh
 2.101 (apt has 2.46), mise, yazi, sops, atuin (apt has 18.8), carapace. Flatpak
@@ -71,7 +71,7 @@ without root: Discord.
 
 Kept on purpose: Ubuntu Pro (free personal: ESM + Livepatch), `unattended-upgrades`
 (security only), `power-profiles-daemon` (TLP would conflict; `thermald` stays
-installed but exits on DYTC ThinkPads, see "Laptop and power"), GNOME Boxes snap,
+installed but exits on DYTC ThinkPads, see "Laptop and power"),
 Chrome (telemetry off by policy).
 
 ## sysctl hardening (`system/99-hardening.conf`)
@@ -136,9 +136,8 @@ VM unless opened by hand (`sudo ufw allow in on virbr0 to any port 3000`).
 `tailscale0` gets no rule: Tailscale SSH, Taildrop and `tailscale serve` are
 handled inside tailscaled and need none, and neither the NixOS nor the Fedora
 config trusts that interface. Open a service to the tailnet per port
-(`sudo ufw allow in on tailscale0 to any port 3000`). Re-runs delete the broad
-`allow in on virbr0` / `tailscale0` rules that earlier versions of the script
-added. Nothing else listens: no sshd, and the WS-Discovery responder (`wsdd`)
+(`sudo ufw allow in on tailscale0 to any port 3000`). Re-runs remove any
+blanket `allow in on virbr0` / `tailscale0` rule. Nothing else listens: no sshd, and the WS-Discovery responder (`wsdd`)
 that gvfs started on UDP 3702 is purged.
 
 ## Telemetry, crash reporting, browsers
@@ -200,7 +199,7 @@ rather than replaced:
 - **thermald exits on purpose** on ThinkPads with DYTC ("Thermald can't run on
   this platform"): the firmware manages thermals through the platform profile.
   TLP is not installed, it would fight power-profiles-daemon.
-- **intel-lpmd** was evaluated and left out: its CPU table (v0.1.0) covers
+- **intel-lpmd** is not installed: its CPU table (v0.1.0) covers
   Arrow Lake-U (model 0xb5) only; this is Arrow Lake-H (0xc5) and the daemon
   refuses to start without `--ignore-platform-check`.
 - **Battery charge limit 75–80 %** (Settings → Power → Battery charge limit,
@@ -220,6 +219,15 @@ rather than replaced:
   forcing runtime PM on every device is what breaks USB dongles and audio.
 - GNOME: dim and blank after 5 min, suspend after 15 min on battery, never on
   the charger; `verify-setup` has a Power section for all of this.
+- Unattended upgrades run on battery too. Ubuntu's `apt-daily-upgrade.service`
+  has `ConditionACPower=true`; a laptop that sleeps through the 06:00 slot runs
+  the timer at the next wake-up, usually on battery, and every run is skipped.
+  `unattended-upgrade` then has a second check of its own
+  (`Unattended-Upgrade::OnlyOnACPower`, default true). The drop-in
+  `system/apt-daily-upgrade-battery.conf` clears the unit condition and
+  `system/apt-unattended-local.conf` turns the second check off; the downloads
+  are small. Metered connections (a phone hotspot) are still skipped, which is
+  unattended-upgrade's default.
 - Fingerprint: the ELAN reader is supported by libfprint (`fprintd-list $USER`
   shows the device). Enrol in Settings → System → Users → Fingerprint Login;
   Ubuntu enables `pam_fprintd` for login, sudo and the lock screen at the first
@@ -248,7 +256,7 @@ the passphrase).
 ### Auditing
 
 ```bash
-sudo lynis audit system        # hardening index 64 on this laptop, no warnings
+sudo lynis audit system        # hardening audit
 sudo debsums -s                # package files that differ from dpkg's checksums
 ```
 
@@ -336,12 +344,11 @@ tunnels. `fwupd` for firmware, `mokutil --sb-state` for Secure Boot.
   group installed, `docker` is Docker Engine (root daemon, ports on localhost by
   default) and Podman stays for rootless work and the `kali` helper. The Kali
   base image is pulled during setup so `kali` starts instantly. `docker.io`
-  replaces the `podman-docker` shim, but a removed package keeps its conffiles:
-  its `/etc/profile.d/podman-docker.sh` kept exporting `DOCKER_HOST=<podman
-  socket>` into every login shell and the GNOME session, so `docker` quietly
-  talked to Podman (found 2026-09-27: `docker run -p 8080:80` showed up as
-  Podman's `rootlessport` on `*:8080`). The package is purged by name, and the
-  shell configs drop a stale value when the engine's socket exists.
+  replaces the `podman-docker` shim, but the removed package's
+  `/etc/profile.d/podman-docker.sh` keeps pointing `DOCKER_HOST` at Podman in
+  every login shell, so `docker` would quietly talk to Podman. The package is
+  purged by name, and the shell configs drop a stale value when the engine's
+  socket exists.
 - **Windows 11 guest**: `scripts/new-windows-vm.sh <Windows.iso>` creates the
   `default` storage pool if missing, uploads the Windows ISO and the virtio
   driver ISO into it, and runs `virt-install` with UEFI + Secure Boot, an
@@ -353,10 +360,9 @@ tunnels. `fwupd` for firmware, `mokutil --sb-state` for Secure Boot.
   (`archive-virtio/virtio-win-0.1.302-1/`) and its SHA-256, checked before the
   upload and on every re-run; the `stable-virtio/` alias redirects to plain
   http (which `--proto '=https'` refuses) and moves between versions. The
-  project publishes MD5 sums for its RPMs only, so the hash was taken from the
-  ISO itself on 2026-09-27; a new upstream release means updating the
-  `VIRTIO_*` lines in the script.
-- **GNOME Boxes** (snap) stays for quick throwaway VMs.
+  project publishes MD5 sums for its RPMs only, so the pinned hash is
+  trust-on-first-download; a new release means updating the four `VIRTIO_*`
+  values in the script.
 - **Flatpak** with Flathub for sandboxed GUI apps.
 
 ## Development
@@ -410,7 +416,7 @@ tunnels. `fwupd` for firmware, `mokutil --sb-state` for Secure Boot.
   VS Code, Text Editor, App Center, Settings (an entry is set only when its
   `.desktop` file exists, flatpak exports included). Everything else lives in
   the app grid (Super).
-- **Clicking a notification opens its app** through an extension of our own,
+- **Clicking a notification opens its app** through the bundled extension
   `configs/gnome-shell/notification-focus@26zl.github.com`, linked by
   `apply-user.sh` and enabled by `apply-gnome.sh`. GNOME Shell 50 does not raise
   an app when its notification is clicked. It sends the app an activation
@@ -426,8 +432,7 @@ tunnels. `fwupd` for firmware, `mokutil --sb-state` for Secure Boot.
   which stops the busy cursor: right away for a single-window app, after 2 s
   for a multi-window app, so Chrome can still use the token to pick the right
   window. Apps that are not running are not launched, because the click may
-  already be starting them. One fix for every app instead of per-app
-  overrides. About 150 lines of our own code, with no third-party extension.
+  already be starting them.
 - **Nord icons and cursor**: the same Nordzy set as the NixOS ThinkPad,
   installed per user from pinned releases with SHA-256 checks (Nordzy-icon 1.8.7
   `Nordzy-dark`, Nordzy-cursors v2.4.0) into `~/.local/share/icons`; GDM and the
@@ -448,28 +453,23 @@ tunnels. `fwupd` for firmware, `mokutil --sb-state` for Secure Boot.
 - **Docker Engine** — opt-in only; rootless Podman with the docker shim covers
   the workflows without a root daemon.
 - **TLP** — conflicts with power-profiles-daemon, which is right for Arrow Lake.
-- **GNOME extensions beyond Ubuntu's** — each is JavaScript inside the shell
-  process.
-- **Removing GRUB's Windows entry** — one command in the README's dual-boot
-  section; the hidden menu already boots Ubuntu directly.
+- **More GNOME extensions** than Caffeine and the bundled notification-focus —
+  each one is JavaScript inside the shell process.
 - **Burp Suite, Metasploit and the rest of the heavy pentest set** — they run
   in the Kali container (`kali persist`, then `apt install` inside); the host
   keeps only the small classic toolkit and the general `tools` group.
 - **SSH key** — generate one yourself with a passphrase:
   `ssh-keygen -t ed25519 -a 100` then `gh ssh-key add ~/.ssh/id_ed25519.pub`.
-- **Dolby speaker tuning** — this model's Conexant SN6140 codec is not in
+- **Dolby speaker tuning** — the Conexant SN6140 codec has no ready profile in
   [mister2d/thinkpad-linux-audio](https://github.com/mister2d/thinkpad-linux-audio);
   [speaker-tuning-to-easyeffects](https://github.com/antoinecellerier/speaker-tuning-to-easyeffects)
-  can build a PipeWire filter-chain (no EasyEffects, `lsp-plugins-lv2` at run
-  time) from Lenovo's audio package `r31sj19w` if it carries a
-  `DEV_1F87_SUBSYS_17AA5134` tuning: `python3 tools/fetch_driver/get_lenovo_dax_xml.py --dry-run`
-  answers that without changing anything. Left as an experiment.
+  may build a PipeWire filter-chain from Lenovo's audio package (untested).
 
 ## Reviewed and not copied
 
-The most-starred Ubuntu/GNOME setup repositories were read against this one:
-[omakub](https://github.com/omacom/omakub) (8k), [linutil](https://github.com/ChrisTitusTech/linutil)
-(5k), [konstruktoid/hardening](https://github.com/konstruktoid/hardening) (1.9k),
+Compared with the common Ubuntu/GNOME setup repositories:
+[omakub](https://github.com/omacom/omakub), [linutil](https://github.com/ChrisTitusTech/linutil),
+[konstruktoid/hardening](https://github.com/konstruktoid/hardening),
 [lockdown.sh](https://github.com/dolegi/lockdown.sh),
 [franckferman/ubuntu-post-install](https://github.com/franckferman/ubuntu-post-install).
 Taken from them: `wsdd` and motd-news removal, TRIM through LUKS, btop's Nord
@@ -494,7 +494,7 @@ the `performance` profile with suspend off, masking CUPS (franckferman).
 | [Nordzy-icon 1.8.7](https://github.com/MolassesLover/Nordzy-icon), [Nordzy-cursors v2.4.0](https://github.com/guillaumeboehm/Nordzy-cursors) | icon and cursor theme |
 | [Caffeine v60](https://github.com/eonpatapon/gnome-shell-extension-caffeine) ([extensions.gnome.org](https://extensions.gnome.org/extension/517/caffeine/)) | keep-awake toggle and its SHA-256 |
 | [omakub](https://github.com/omacom/omakub), [konstruktoid/hardening](https://github.com/konstruktoid/hardening), [linutil](https://github.com/ChrisTitusTech/linutil) | btop theme and GNOME keys; motd-news, wsdd; TRIM |
-| [lockdown.sh](https://github.com/dolegi/lockdown.sh), [franckferman/ubuntu-post-install](https://github.com/franckferman/ubuntu-post-install), [webpro/awesome-dotfiles](https://github.com/webpro/awesome-dotfiles) | reviewed, nothing copied (see above) |
+| [lockdown.sh](https://github.com/dolegi/lockdown.sh), [franckferman/ubuntu-post-install](https://github.com/franckferman/ubuntu-post-install), [webpro/awesome-dotfiles](https://github.com/webpro/awesome-dotfiles) | reviewed, nothing copied |
 | [26zl/nvim](https://github.com/26zl/nvim), [26zl/vscode_config](https://github.com/26zl/vscode_config), [26zl/cybersec-toolkit](https://github.com/26zl/cybersec-toolkit) | editor configs; the opt-in security toolkit |
 | Vendor apt repos: [VS Code](https://code.visualstudio.com/docs/setup/linux), [Mullvad](https://mullvad.net/en/download/vpn/linux), [Tailscale](https://tailscale.com/kb/1275/install-ubuntu-2404), [Google Chrome](https://www.google.com/linuxrepositories/) | deb822 sources and the signing keys (fingerprints above) |
 | [Flathub](https://flathub.org) (`com.discordapp.Discord`), [Homebrew on Linux](https://docs.brew.sh/Homebrew-on-Linux), [mise](https://mise.jdx.dev), [rustup](https://rustup.rs) | Discord; gh, mise, yazi, sops, atuin, carapace; Node and uv; Rust |

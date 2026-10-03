@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   shellcheck:
+    timeout-minutes: 10
     name: Lint shell scripts
     runs-on: ubuntu-latest
     steps:
@@ -24,8 +25,8 @@ jobs:
         with:
           scandir: "."
           severity: warning
-          # configs/ holds sourced dotfile fragments (bashrc, fish) and one
-          # standalone helper (configs/bin/kali) that is checked explicitly below
+          # configs/ holds sourced dotfile fragments; bashrc and bin/kali are
+          # linted explicitly below
           ignore_paths: configs
 
       - name: Lint the helper installed to ~/.local/bin

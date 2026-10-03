@@ -16,7 +16,7 @@ Thumbs.db
 *.swp
 *.swo
 
-# Temp / logs / backups made by the scripts
+# Temp / logs / backups
 *.log
 *.tmp
 *.bak
@@ -26,6 +26,3 @@ Thumbs.db
 # Claude Code
 CLAUDE.md
 .claude/
-
-# Dependencies
-node_modules/

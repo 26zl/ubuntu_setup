@@ -36,7 +36,7 @@ fi
 section "Battery"
 if [ -d /sys/class/power_supply/BAT0 ]; then
     b=/sys/class/power_supply/BAT0
-    echo "  $(cat $b/capacity)% ($(cat $b/status))  ·  charge thresholds $(cat $b/charge_control_start_threshold 2>/dev/null || echo ?)–$(cat $b/charge_control_end_threshold 2>/dev/null || echo ?)%"
+    echo "  $(cat $b/capacity)% ($(cat $b/status))  ·  charge thresholds $(cat $b/charge_control_start_threshold 2>/dev/null || echo '?')–$(cat $b/charge_control_end_threshold 2>/dev/null || echo '?')%"
     full=$(cat $b/energy_full 2>/dev/null); design=$(cat $b/energy_full_design 2>/dev/null)
     [ -n "$full" ] && [ -n "$design" ] && echo "  health $((full * 100 / design))% of design capacity"
 fi

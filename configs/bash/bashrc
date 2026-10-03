@@ -15,7 +15,7 @@ fi
 
 export PATH="$HOME/.local/bin:$PATH"
 
-# Homebrew (only if installed and not already on PATH)
+# Homebrew (only if installed)
 if [[ -z ${HOMEBREW_PREFIX:-} && -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then
   eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv bash)"
 fi
@@ -24,20 +24,24 @@ export EDITOR=nvim
 export VISUAL=nvim
 
 # eza — modern ls
-alias ls='eza --icons --group-directories-first'
-alias ll='eza --icons --group-directories-first -lh --git'
-alias la='eza --icons --group-directories-first -lha --git'
-alias tree='eza --icons --tree'
+if command -v eza >/dev/null; then
+    alias ls='eza --icons --group-directories-first'
+    alias ll='eza --icons --group-directories-first -lh --git'
+    alias la='eza --icons --group-directories-first -lha --git'
+    alias tree='eza --icons --tree'
+fi
 
 # bat — syntax-highlighted cat
-alias cat='bat --pager=never'
-export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+if command -v bat >/dev/null; then
+    alias cat='bat --pager=never'
+    export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+fi
 
 # git
 alias gs='git status'
 alias gd='git diff'
 alias lg='lazygit'
-export GIT_PAGER='delta'
+command -v delta >/dev/null && export GIT_PAGER='delta'
 
 # color for the classics
 alias grep='grep --color=auto'

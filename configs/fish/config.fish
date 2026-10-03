@@ -5,7 +5,7 @@ set -g fish_greeting
 
 fish_add_path ~/.local/bin ~/bin
 
-# Homebrew (only if installed; gh, mise, yazi and sops come from it)
+# Homebrew (only if installed; see packages/brew.txt)
 if test -x /home/linuxbrew/.linuxbrew/bin/brew; and not set -q HOMEBREW_PREFIX
     eval (/home/linuxbrew/.linuxbrew/bin/brew shellenv fish)
 end
@@ -14,14 +14,18 @@ set -gx EDITOR nvim
 set -gx VISUAL nvim
 
 # eza — modern ls
-alias ls='eza --icons --group-directories-first'
-alias ll='eza --icons --group-directories-first -lh --git'
-alias la='eza --icons --group-directories-first -lha --git'
-alias tree='eza --icons --tree'
+if command -q eza
+    alias ls='eza --icons --group-directories-first'
+    alias ll='eza --icons --group-directories-first -lh --git'
+    alias la='eza --icons --group-directories-first -lha --git'
+    alias tree='eza --icons --tree'
+end
 
 # bat — syntax-highlighted cat (Ubuntu ships it as batcat; apply-user.sh links ~/.local/bin/bat)
-alias cat='bat --pager=never'
-set -gx MANPAGER "sh -c 'col -bx | bat -l man -p'"
+if command -q bat
+    alias cat='bat --pager=never'
+    set -gx MANPAGER "sh -c 'col -bx | bat -l man -p'"
+end
 
 # color for the classics
 alias grep='grep --color=auto'
@@ -31,7 +35,7 @@ alias diff='diff --color=auto'
 alias gs='git status'
 alias gd='git diff'
 alias lg='lazygit'
-set -gx GIT_PAGER delta
+command -q delta; and set -gx GIT_PAGER delta
 
 # rootless Podman is the Docker host for docker-compatible tooling (compose,
 # testcontainers) unless a real Docker daemon is installed

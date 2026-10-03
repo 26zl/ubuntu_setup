@@ -7,5 +7,5 @@ node = "lts"
 uv = "latest"
 
 [settings]
-# never run a version file's hooks or install a tool without an explicit `mise install`
+# no auto-install from the command-not-found handler; tools come from `mise install`
 not_found_auto_install = false

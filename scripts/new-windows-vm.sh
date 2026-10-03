@@ -25,8 +25,8 @@ die()  { echo -e "  ${RED}!${RESET} $1" >&2; exit 1; }
 URI=qemu:///system
 # virtio-win pinned to a release directory and its SHA-256: the stable-virtio/
 # alias redirects to plain http and moves between versions. The project publishes
-# MD5 sums for its RPMs only, so the hash is of this ISO as downloaded 2026-09-27;
-# a new upstream release means updating the three VIRTIO_* lines.
+# MD5 sums for its RPMs only, so the ISO hash is trust-on-first-download; a new
+# upstream release means updating all four VIRTIO_* values.
 VIRTIO_DIR=https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.302-1
 VIRTIO_ISO=virtio-win-0.1.302.iso
 VIRTIO_SHA256=303f7ae40dad495d6ae474fdc571df58958a4dbc5c37a522d80f9a203867949d
@@ -54,9 +54,23 @@ if [ "$PREPARE" -eq 0 ]; then
 fi
 v() { virsh -c "$URI" "$@"; }
 
+# upload FILE VOLNAME — copy an ISO into the pool through the daemon (raw volume)
+upload() {
+    local file=$1 vol=$2 size
+    if v vol-info --pool default "$vol" >/dev/null 2>&1; then ok "$vol already in the pool"; return 0; fi
+    size=$(stat -c %s "$file")
+    v vol-create-as default "$vol" "$size" --format raw >/dev/null
+    v vol-upload --pool default "$vol" "$file" >/dev/null ||
+        { v vol-delete --pool default "$vol" >/dev/null 2>&1; die "upload of $vol failed; volume removed"; }
+    ok "$vol uploaded ($((size / 1024 / 1024)) MB)"
+}
+virtio_ok() { echo "$VIRTIO_SHA256  $CACHE" | sha256sum -c --quiet - 2>/dev/null; }
+
+if [ "$DRY" -eq 1 ]; then
+    info "dry run: storage pool, virtio ISO download and ISO uploads skipped"
 # storage pool: virt-manager normally creates it on first launch; the daemon
 # does the directory work as root, no sudo needed
-if ! v pool-info default >/dev/null 2>&1; then
+elif ! v pool-info default >/dev/null 2>&1; then
     v pool-define-as default dir --target /var/lib/libvirt/images >/dev/null
     v pool-build default >/dev/null
     v pool-start default >/dev/null
@@ -67,19 +81,10 @@ else
     ok "storage pool 'default' present"
 fi
 
-# upload FILE VOLNAME — copy an ISO into the pool through the daemon (raw volume)
-upload() {
-    local file=$1 vol=$2 size
-    if v vol-info --pool default "$vol" >/dev/null 2>&1; then ok "$vol already in the pool"; return 0; fi
-    size=$(stat -c %s "$file")
-    v vol-create-as default "$vol" "$size" --format raw >/dev/null
-    v vol-upload --pool default "$vol" "$file" >/dev/null
-    ok "$vol uploaded ($((size / 1024 / 1024)) MB)"
-}
-
 # virtio drivers (storage, network, balloon, guest tools) from the Fedora project
-virtio_ok() { echo "$VIRTIO_SHA256  $CACHE" | sha256sum -c --quiet - 2>/dev/null; }
-if ! v vol-info --pool default virtio-win.iso >/dev/null 2>&1; then
+if [ "$DRY" -eq 1 ]; then
+    :
+elif ! v vol-info --pool default virtio-win.iso >/dev/null 2>&1; then
     # a partial download is resumed; a complete file that is not this release is replaced
     if [ -s "$CACHE" ] && ! virtio_ok && [ "$(stat -c %s "$CACHE")" -ge "$VIRTIO_SIZE" ]; then
         info "cached ISO is not $VIRTIO_ISO; downloading again"; rm -f "$CACHE"
@@ -94,12 +99,15 @@ if ! v vol-info --pool default virtio-win.iso >/dev/null 2>&1; then
 else
     ok "virtio-win.iso already in the pool"
 fi
-[ "$PREPARE" -eq 1 ] && { ok "prepared; run again with the Windows ISO"; exit 0; }
+if [ "$PREPARE" -eq 1 ]; then
+    [ "$DRY" -eq 1 ] || ok "prepared; run again with the Windows ISO"
+    exit 0
+fi
 
 winvol=$(basename "$iso")
 [ "$DRY" -eq 1 ] || upload "$iso" "$winvol"
-win_path=/var/lib/libvirt/images/$winvol
-virtio_path=$(v vol-path --pool default virtio-win.iso)
+win_path=$(v vol-path --pool default "$winvol" 2>/dev/null || echo "/var/lib/libvirt/images/$winvol")
+virtio_path=$(v vol-path --pool default virtio-win.iso 2>/dev/null || echo /var/lib/libvirt/images/virtio-win.iso)
 
 args=(
     --connect "$URI" --name "$name" --osinfo win11

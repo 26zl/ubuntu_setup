@@ -51,7 +51,7 @@ then run `verify-setup`. After editing anything, re-run the half it belongs to:
 | Packages | `packages/apt.txt`, grouped: `base desktop dev virt security vpn media tools` by default, `docker` opt-in. Every name is checked against apt before one install call |
 | Debloat | Purged: kdump-tools, whoopsie, cloud-init, wsdd. Off: apport, avahi, cups-browsed, ModemManager, motd-news, Pro apt news |
 | ClamAV | `clamav-freshclam-once.timer` enabled: daily signature updates, scanning on demand |
-| Hardening | sysctl (`system/99-hardening.conf`), kernel parameters (`slab_nomerge init_on_alloc=1 page_alloc.shuffle=1 vsyscall=none`), blocked modules (dccp sctp rds tipc firewire), resolved (DNS-over-TLS opportunistic, DNSSEC allow-downgrade, LLMNR and mDNS off, Quad9 fallback), NetworkManager (random MAC while scanning, stable per-network MAC, no DHCP hostname), no core dumps, journal capped at 1G, sudo `use_pty` + 10 min timeout, unattended-upgrades removes unused dependencies |
+| Hardening | sysctl (`system/99-hardening.conf`), kernel parameters (`slab_nomerge init_on_alloc=1 page_alloc.shuffle=1 vsyscall=none`), blocked modules (dccp sctp rds tipc firewire), resolved (DNS-over-TLS opportunistic, DNSSEC allow-downgrade, LLMNR and mDNS off, Quad9 fallback), NetworkManager (random MAC while scanning, stable per-network MAC, no DHCP hostname), no core dumps, journal capped at 1G, sudo `use_pty` + 10 min timeout, unattended-upgrades runs on battery too and removes unused dependencies |
 | Browsers | Firefox and Chrome policies: telemetry, Studies, Pocket, sponsored content, metrics and background mode off |
 | Firewall | ufw: deny incoming, allow outgoing, deny routed; VMs on `virbr0` reach the host's DNS/DHCP only and are NATed out; nothing is opened on `tailscale0` |
 | Virtualization | libvirt default network active and autostarting, user in libvirt/kvm/wireshark, rootless Podman with the docker shim, Flathub; with `docker`: Docker Engine with published ports bound to 127.0.0.1, and the `podman-docker` shim's leftover `DOCKER_HOST` hook purged so `docker` really talks to the engine |
@@ -64,10 +64,11 @@ then run `verify-setup`. After editing anything, re-run the half it belongs to:
 Symlinks every `configs/` file (a real file in the way is kept as
 `*.bak-<stamp>`), installs Nerd Fonts and the Nordzy icons and cursor from
 pinned releases, seeds the btop theme, installs the Homebrew formulae
-(`gh mise yazi sops`) when brew exists, mise runtimes (Node LTS, uv), rustup
-stable, the Podman user socket and the Kali image, the battery charge limit
-(75–80 %), Flatpak Discord, the `26zl/nvim` and `26zl/vscode_config` repos,
-GNOME settings through `apply-gnome.sh` (dark Nord look, privacy toggles,
+(`packages/brew.txt`: gh, mise, yazi, sops, atuin, carapace) when brew exists,
+mise runtimes (Node LTS, uv), rustup stable, the Podman user socket and the Kali
+image, the battery charge limit (75–80 %), Flatpak Discord, the Caffeine and
+notification-focus GNOME extensions, the `26zl/nvim` and `26zl/vscode_config`
+repos, GNOME settings through `apply-gnome.sh` (dark Nord look, privacy toggles,
 `nb_NO` formats, floating dock with eight favourites, kitty on Super+Return) and
 the git identity from the gh account (`setup-github.sh`).
 
@@ -109,7 +110,7 @@ configs alias `cat` to `bat` and `ls` to `eza`.
 | `bash scripts/update.sh` | apt, snap, flatpak, brew, mise, rustup, the editor configs, firmware check |
 | `kali` · `kali persist` · `kali rm` | Kali Linux shell in rootless Podman, `~/pentest` mounted at `/work` |
 | `bash scripts/new-windows-vm.sh <Win11.iso>` | Windows 11 guest: UEFI + Secure Boot, swtpm TPM 2.0, virtio, q35, SPICE. `--prepare` first, `--dry-run` shows the command |
-| `sudo lynis audit system` · `sudo debsums -s` | audit (hardening index 64 here) and package integrity |
+| `sudo lynis audit system` · `sudo debsums -s` | hardening audit and package integrity |
 | `clamscan -r --infected ~/Downloads` | on-demand malware scan |
 
 ## Dual boot with Windows
