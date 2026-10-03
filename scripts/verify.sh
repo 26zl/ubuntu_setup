@@ -129,7 +129,7 @@ if pro status 2>/dev/null | grep -q 'not attached'; then
 else
     check "Ubuntu Pro: livepatch/esm" "pro status 2>/dev/null | grep -Eq 'livepatch +yes +enabled'"
 fi
-check "firmware: no pending updates" "! fwupdmgr get-updates --json 2>/dev/null | jq -e '(.Devices // []) | length > 0'"
+check "firmware: no pending updates" "command -v fwupdmgr >/dev/null && ! fwupdmgr get-updates --json 2>/dev/null | jq -e '(.Devices // []) | length > 0'"
 
 section "Dotfiles and tools"
 for f in ~/.config/fish/config.fish ~/.config/kitty/kitty.conf ~/.config/starship.toml ~/.config/git/config ~/.ssh/config ~/.config/mise/config.toml; do

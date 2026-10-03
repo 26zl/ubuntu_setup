@@ -11,9 +11,10 @@
 Post-install setup for Ubuntu 26.04 LTS with GNOME 50 on a Lenovo ThinkPad E14
 Gen 7: security and privacy hardening, KVM + rootless Podman with Kali in a
 container, a full-stack toolchain and Nord dotfiles. Every script is idempotent
-and has `--dry-run`, every download is pinned by SHA-256, and every file lands
-at one documented path. The reasoning behind each choice, the trade-offs and
-the sources are in [docs/DESIGN.md](docs/DESIGN.md).
+and has `--dry-run`, every direct download is pinned by SHA-256 (git clones and
+the Kali image follow their upstream), and every file lands at one documented
+path. The reasoning behind each choice, the trade-offs and the sources are in
+[docs/DESIGN.md](docs/DESIGN.md).
 
 ## Hardware
 

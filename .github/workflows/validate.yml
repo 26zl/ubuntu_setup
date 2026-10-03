@@ -2,9 +2,9 @@ name: Validate Configs
 
 on:
   push:
-    branches: ["*"]
+    branches: ["**"]
   pull_request:
-    branches: ["*"]
+    branches: ["**"]
   schedule:
     - cron: "0 6 * * 1" # weekly, catches upstream package renames
 
@@ -35,7 +35,7 @@ jobs:
       - name: Validate TOML and JSON files
         run: |
           set -e
-          for f in $(find . -name "*.toml" -not -path "./.git/*"); do
+          for f in $(find . -name "*.toml" -not -path "./.git/*") configs/containers/registries.conf; do
             python3 -c "import tomllib; tomllib.load(open('$f','rb'))" && echo "$f: OK"
           done
           for f in $(find . -name "*.json" -not -path "./.git/*"); do

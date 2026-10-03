@@ -5,18 +5,18 @@ set -euo pipefail
 
 # gh stores credentials per user and opens the user's browser — sudo breaks both
 if [ "$EUID" -eq 0 ]; then
-  echo "ERROR: run without sudo, as your normal user." >&2
-  exit 1
+    echo "ERROR: run without sudo, as your normal user." >&2
+    exit 1
 fi
 [ -x /home/linuxbrew/.linuxbrew/bin/brew ] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv bash)"
 command -v gh >/dev/null || { echo "gh not found (brew install gh, or apt install gh)" >&2; exit 1; }
 
 if gh auth status >/dev/null 2>&1; then
-  echo "==> Already logged in to GitHub:"
-  gh auth status
+    echo "==> Already logged in to GitHub:"
+    gh auth status
 else
-  echo "==> Logging in to GitHub via your web browser..."
-  gh auth login --hostname github.com --git-protocol https --web
+    echo "==> Logging in to GitHub via your web browser..."
+    gh auth login --hostname github.com --git-protocol https --web
 fi
 
 echo "==> Wiring git <-> gh credentials"

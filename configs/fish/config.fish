@@ -75,6 +75,6 @@ command -q starship; and starship init fish | source
 
 # VS Code sets up its shell integration only for the shell it starts itself;
 # here that is bash handing over to fish, so load it for fish explicitly.
-if string match -q "$TERM_PROGRAM" vscode; and command -q code
+if string match -q vscode -- "$TERM_PROGRAM"; and command -q code
     source (code --locate-shell-integration-path fish)
 end

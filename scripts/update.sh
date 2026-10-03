@@ -32,7 +32,9 @@ if [ -d ~/.config/nvim/.git ]; then
 fi
 # The clone settings.json links to, wherever it lives.
 vcdir="$(dirname "$(readlink -f ~/.config/Code/User/settings.json 2>/dev/null || echo /nonexistent/x)")"
-[ -d "$vcdir/.git" ] && git -C "$vcdir" pull -q --autostash --ff-only
+if [ -d "$vcdir/.git" ]; then
+    git -C "$vcdir" pull -q --autostash --ff-only || echo "  vscode_config not updated (git -C $vcdir status)"
+fi
 
 section "Firmware"
 fwupdmgr refresh --force >/dev/null 2>&1 || true

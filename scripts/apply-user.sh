@@ -269,16 +269,19 @@ else
 fi
 # VSCODE_ROLE picks another vscode_config role: cybersec or fullstack.
 vcrole="${VSCODE_ROLE:-sysadmin}"
-vclog=$(mktemp -t vscode-install.XXXXXX)
 if ! command -v code >/dev/null; then
     warn "code not installed; run apply-system.sh first"
 elif [ "$DRY" -eq 1 ]; then
     echo "  [dry] $vcdir/install.sh --role $vcrole"
-elif (cd "$vcdir" && ./install.sh --role "$vcrole" >"$vclog" 2>&1); then
-    ok "settings linked + extensions: role $vcrole"
 else
-    warn "extension install failed (see $vclog); linking settings only"
-    (cd "$vcdir" && ./install.sh --no-ext >/dev/null 2>&1) && ok "settings linked"
+    vclog=$(mktemp -t vscode-install.XXXXXX)
+    if (cd "$vcdir" && ./install.sh --role "$vcrole" >"$vclog" 2>&1); then
+        ok "settings linked + extensions: role $vcrole"
+        rm -f "$vclog"
+    else
+        warn "extension install failed (see $vclog); linking settings only"
+        (cd "$vcdir" && ./install.sh --no-ext >/dev/null 2>&1) && ok "settings linked"
+    fi
 fi
 
 section "GNOME"

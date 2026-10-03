@@ -344,8 +344,9 @@ section "Storage (TRIM through LUKS)"
 # fstrim never reaches the SSD (lsblk -D shows 0B on the crypt device). TRIM
 # reveals which blocks of the encrypted volume are free; the installer's own
 # default layouts accept that trade for SSD life and performance.
-if grep -qE '^[^#].*\bluks\b' /etc/crypttab 2>/dev/null && ! grep -qE '^[^#].*\bdiscard\b' /etc/crypttab; then
-    run sed -i -E '/^[^#]/ s/^(([^[:space:]]+[[:space:]]+){3}[^[:space:]]*)\bluks\b/\1luks,discard/' /etc/crypttab
+# only the entries that lack it, so a LUKS device added later gets it too
+if grep -E '^[^#].*\bluks\b' /etc/crypttab 2>/dev/null | grep -vE '\bdiscard\b' | grep . >/dev/null; then
+    run sed -i -E '/^[^#]/ { /\bdiscard\b/! s/^(([^[:space:]]+[[:space:]]+){3}[^[:space:]]*)\bluks\b/\1luks,discard/ }' /etc/crypttab
     run update-initramfs -u >/dev/null 2>&1 || warn "update-initramfs failed; run it by hand"
     reboot_needed=1
     ok "/etc/crypttab: discard added (active after reboot, then fstrim.timer works)"

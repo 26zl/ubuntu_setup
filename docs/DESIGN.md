@@ -50,7 +50,7 @@ run halfway.
 | `docker` | opt-in (`--groups all`): docker.io + compose v2 — a root daemon and a root-equivalent group. `system/docker-daemon.json` binds published ports to 127.0.0.1 by default because Docker's own firewall rules are evaluated before ufw's; ask for `0.0.0.0:80:80` explicitly to expose a port. |
 
 Homebrew (`packages/brew.txt`) adds only what apt lacks or ships too old: gh
-2.101 (apt has 2.46), mise, yazi, sops, atuin (apt has 18.8), carapace. Flatpak
+(apt has 2.46), mise, yazi, sops, atuin (apt has 18.8), carapace. Flatpak
 (`packages/flatpak.txt`) carries the sandboxed desktop apps, installed per user
 without root: Discord.
 

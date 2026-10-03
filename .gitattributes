@@ -1,0 +1,2 @@
+# Linux-targeted files: LF in every worktree, also on Windows checkouts with core.autocrlf
+* text=auto eol=lf
