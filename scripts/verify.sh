@@ -85,6 +85,7 @@ check "Chrome policies installed"  "[ -f /etc/opt/chrome/policies/managed/privac
 check "unattended security upgrades on" "grep -q 'Unattended-Upgrade \"1\"' /etc/apt/apt.conf.d/20auto-upgrades"
 check "unattended upgrades run on battery too" "systemctl cat apt-daily-upgrade.service 2>/dev/null | grep -q '^ConditionACPower=$' && apt-config dump 2>/dev/null | grep -q 'Unattended-Upgrade::OnlyOnACPower \"false\"'"
 check "ClamAV signature timer enabled" "systemctl is-enabled clamav-freshclam-once.timer 2>/dev/null | grep -q '^enabled'"
+check "ClamAV signatures updated in the last 3 days" "find /var/lib/clamav -maxdepth 1 -name 'daily.c[lv]d' -mtime -3 | grep -q ."
 
 section "Sandboxing"
 check "AppArmor enforcing"         "aa-enabled"

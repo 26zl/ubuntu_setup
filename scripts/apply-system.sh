@@ -239,6 +239,7 @@ if unit_exists clamav-freshclam-once.timer; then
     else
         ok "clamav-freshclam-once.timer enabled"
     fi
+    if deploy system/clamav-freshclam-retry.conf /etc/systemd/system/clamav-freshclam-once.service.d/retry.conf; then run systemctl daemon-reload; fi
 fi
 
 section "Kernel and network hardening (system/)"

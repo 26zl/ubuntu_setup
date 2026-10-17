@@ -51,7 +51,7 @@ then run `verify-setup`. After editing anything, re-run the half it belongs to:
 | Repos | VS Code, Mullvad, Tailscale, Chrome as deb822 `.sources` with `Signed-By` keyrings; keys pinned by SHA-256, Chrome's by fingerprint |
 | Packages | `packages/apt.txt`, grouped: `base desktop dev virt security vpn media tools` by default, `docker` opt-in. Every name is checked against apt before one install call |
 | Debloat | Purged: kdump-tools, whoopsie, cloud-init, wsdd. Off: apport, avahi, cups-browsed, ModemManager, motd-news, Pro apt news |
-| ClamAV | `clamav-freshclam-once.timer` enabled: daily signature updates, scanning on demand |
+| ClamAV | `clamav-freshclam-once.timer` enabled: daily signature updates, retried when the network is not up yet; scanning on demand |
 | Hardening | sysctl (`system/99-hardening.conf`), kernel parameters (`slab_nomerge init_on_alloc=1 page_alloc.shuffle=1 vsyscall=none`), blocked modules (dccp sctp rds tipc firewire), resolved (DNS-over-TLS opportunistic, DNSSEC allow-downgrade, LLMNR and mDNS off, Quad9 fallback), NetworkManager (random MAC while scanning, stable per-network MAC, no DHCP hostname), no core dumps, journal capped at 1G, sudo `use_pty` + 10 min timeout, unattended-upgrades runs on battery too and removes unused dependencies |
 | Browsers | Firefox and Chrome policies: telemetry, Studies, Pocket, sponsored content, metrics and background mode off |
 | Firewall | ufw: deny incoming, allow outgoing, deny routed; VMs on `virbr0` reach the host's DNS/DHCP only and are NATed out; nothing is opened on `tailscale0` |

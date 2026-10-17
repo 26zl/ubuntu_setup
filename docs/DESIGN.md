@@ -285,7 +285,11 @@ certified but older crypto stack and kernel. Neither is meant for a laptop.
 `clamav` + `clamav-freshclam`, with `clamav-freshclam-once.timer` enabled by
 `apply-system.sh`: the package enables neither the daemon nor the timer, so the
 signatures shipped at install time would silently go stale (the timer runs
-daily with `Persistent=true`, a missed run is caught up at the next boot). No
+daily with `Persistent=true`, a missed run is caught up at the next boot). The
+catch-up often fires right after a resume, before Wi-Fi is back, and fails;
+`system/clamav-freshclam-retry.conf` retries every 10 min, at most four times,
+instead of waiting a day. `verify-setup` checks that the signatures are less
+than three days old. No
 `clamd`: on-access scanning costs throughput on every file read. Scan on demand:
 
 ```bash
