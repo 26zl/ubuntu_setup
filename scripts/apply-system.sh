@@ -244,6 +244,7 @@ fi
 
 section "Kernel and network hardening (system/)"
 if deploy system/99-hardening.conf /etc/sysctl.d/99-hardening.conf; then run sysctl --system -q >/dev/null || warn "a sysctl key was rejected: sysctl --system"; fi
+if deploy system/99-panic.conf /etc/sysctl.d/99-panic.conf; then run sysctl --system -q >/dev/null || warn "a sysctl key was rejected: sysctl --system"; fi
 # ufw applies its own sysctl file after boot and would reset log_martians to 0
 if grep -q '^net/ipv4/conf/\(all\|default\)/log_martians=0' /etc/ufw/sysctl.conf 2>/dev/null; then
     run sed -i 's#^\(net/ipv4/conf/\(all\|default\)/log_martians\)=0#\1=1#' /etc/ufw/sysctl.conf
@@ -409,15 +410,17 @@ elif [ -x /usr/bin/kitty ]; then
     if run update-alternatives --set x-terminal-emulator /usr/bin/kitty >/dev/null 2>&1; then ok "x-terminal-emulator -> kitty"; else warn "kitty is not registered as an x-terminal-emulator alternative"; fi
 fi
 
-section "Snap app permissions (prompting)"
-# Ubuntu's Security Center: snaps ask before reading home / removable media
-state=$(snap get system experimental.apparmor-prompting 2>/dev/null || echo unset)
-if [ "$state" = true ]; then
-    ok "AppArmor prompting already on"
-elif run snap set system experimental.apparmor-prompting=true 2>/dev/null; then
-    ok "AppArmor prompting enabled (log out and in once)"
+section "Snap app permissions (prompting off)"
+# Off until Ubuntu fixes a use-after-free in the kernel's AppArmor notification
+# listener (aa_listener), which snapd's prompting uses (see docs/DESIGN.md)
+prompting=$(curl -s --unix-socket /run/snapd.socket http://localhost/v2/system-info 2>/dev/null |
+    jq -r '.result.features["apparmor-prompting"].enabled // false' 2>/dev/null || true)
+if [ "$prompting" = false ]; then
+    ok "AppArmor prompting off"
+elif [ "$prompting" = true ] && run snap set system experimental.apparmor-prompting=false 2>/dev/null; then
+    ok "AppArmor prompting turned off (snaps keep their normal confinement)"
 else
-    warn "snapd refused experimental.apparmor-prompting on this system; enable it in Security Center"
+    warn "could not read or turn off AppArmor prompting; switch it off in Security Center"
 fi
 
 section "Done"

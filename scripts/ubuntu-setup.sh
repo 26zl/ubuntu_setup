@@ -15,5 +15,5 @@ sudo -v
 sudo bash scripts/apply-system.sh "$@"
 bash scripts/apply-user.sh "${user_args[@]}"
 echo
-echo "Log out and in (group membership, snap prompting), then reboot once for the kernel parameters."
+echo "Log out and in (group membership), then reboot once for the kernel parameters."
 echo "Check the result any time with: verify-setup"

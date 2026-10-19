@@ -37,7 +37,7 @@ bash scripts/ubuntu-setup.sh --dry-run    # prints the plan, changes nothing
 bash scripts/ubuntu-setup.sh              # asks for sudo once; --groups all adds Docker
 ```
 
-Log out and in (groups, snap prompting), reboot once (kernel parameters, TRIM),
+Log out and in (groups), reboot once (kernel parameters, TRIM),
 then run `verify-setup`. After editing anything, re-run the half it belongs to:
 `sudo bash scripts/apply-system.sh` or `bash scripts/apply-user.sh`.
 
@@ -52,13 +52,13 @@ then run `verify-setup`. After editing anything, re-run the half it belongs to:
 | Packages | `packages/apt.txt`, grouped: `base desktop dev virt security vpn media tools` by default, `docker` opt-in. Every name is checked against apt before one install call |
 | Debloat | Purged: kdump-tools, whoopsie, cloud-init, wsdd. Off: apport, avahi, cups-browsed, ModemManager, motd-news, Pro apt news |
 | ClamAV | `clamav-freshclam-once.timer` enabled: daily signature updates, retried when the network is not up yet; scanning on demand |
-| Hardening | sysctl (`system/99-hardening.conf`), kernel parameters (`slab_nomerge init_on_alloc=1 page_alloc.shuffle=1 vsyscall=none`), blocked modules (dccp sctp rds tipc firewire), resolved (DNS-over-TLS opportunistic, DNSSEC allow-downgrade, LLMNR and mDNS off, Quad9 fallback), NetworkManager (random MAC while scanning, stable per-network MAC, no DHCP hostname), no core dumps, journal capped at 1G, sudo `use_pty` + 10 min timeout, unattended-upgrades runs on battery too and removes unused dependencies |
+| Hardening | sysctl (`system/99-hardening.conf`), kernel parameters (`slab_nomerge init_on_alloc=1 page_alloc.shuffle=1 vsyscall=none`), blocked modules (dccp sctp rds tipc firewire), resolved (DNS-over-TLS opportunistic, DNSSEC allow-downgrade, LLMNR and mDNS off, Quad9 fallback), NetworkManager (random MAC while scanning, stable per-network MAC, no DHCP hostname), no core dumps, a frozen kernel panics and reboots after 10 s with the crash saved to EFI pstore, journal capped at 1G, sudo `use_pty` + 10 min timeout, unattended-upgrades runs on battery too and removes unused dependencies |
 | Browsers | Firefox and Chrome policies: telemetry, Studies, Pocket, sponsored content, metrics and background mode off |
 | Firewall | ufw: deny incoming, allow outgoing, deny routed; VMs on `virbr0` reach the host's DNS/DHCP only and are NATed out; nothing is opened on `tailscale0` |
 | Virtualization | libvirt default network active and autostarting, user in libvirt/kvm/wireshark, rootless Podman with the docker shim, Flathub; with `docker`: Docker Engine with published ports bound to 127.0.0.1, and the `podman-docker` shim's leftover `DOCKER_HOST` hook purged so `docker` really talks to the engine |
 | Storage | `discard` added to `/etc/crypttab` so the weekly `fstrim` reaches the SSD through LUKS |
 | Windows disk, dual boot | udev rule hides the BitLocker disk from Files and Disks, matched by GPT UUID; RTC kept in local time, Windows dropped from the GRUB menu (`system/99-no-os-prober.cfg`), GRUB upgrades leave the UEFI boot order alone |
-| Locale, terminal, snaps | `nb_NO.UTF-8` generated, kitty as `x-terminal-emulator`, snap app-permission prompting on |
+| Locale, terminal, snaps | `nb_NO.UTF-8` generated, kitty as `x-terminal-emulator`, snap app-permission prompting off until a kernel bug in it is fixed |
 
 ### User half — `bash scripts/apply-user.sh [--dry-run]` (never sudo)
 

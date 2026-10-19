@@ -110,6 +110,25 @@ firewire-ohci` with `install … /bin/false` (a blacklist only stops autoload).
 kernel already builds with `init_on_alloc` on; it is spelled out so the command
 line documents itself. `crashkernel=` disappears with `kdump-tools`.
 
+## Kernel crashes and freezes (`system/99-panic.conf`)
+
+Ubuntu's kernel registers `efi_pstore` at boot: a panic writes the last 10 KB of
+the kernel log into EFI variables, and `systemd-pstore` moves the record to
+`/var/lib/systemd/pstore` at the next boot and deletes the variables, so the
+firmware's NVRAM does not fill up. A CPU lockup, though, only prints a warning
+by default: the laptop stays frozen until the power button is held, and no
+record is written. `system/99-panic.conf` turns hard and soft lockups into
+panics (the NMI watchdog stays on for hard-lockup detection) and reboots 10 s
+after a panic, so a freeze ends in a reboot with a crash report.
+`verify-setup` reports a waiting record; read it with
+`sudo cat /var/lib/systemd/pstore/*/dmesg.txt`, then delete the directory.
+
+Not enabled: `hung_task_panic`, because a stalled USB stick or an `sshfs` mount
+whose server went away would reboot the laptop; `panic_on_oops` and
+`panic_on_warn`, because a driver oops would reboot in the middle of work (the
+oops itself is still logged). There is no hardware watchdog on this model, so
+systemd's `RuntimeWatchdogSec=` has nothing to drive.
+
 ## DNS and network privacy
 
 `system/resolved-hardening.conf`: no forced global resolver (`DNS=`/`Domains=~.`
@@ -301,7 +320,18 @@ clamscan -r --infected ~/Downloads
 AppArmor is enforcing with Ubuntu's user-namespace restriction on; `bubblewrap`
 works through Ubuntu's `bwrap-userns-restrict` profile, which is what Flatpak
 and the Claude Code sandbox need. Snap app permissions prompting (Ubuntu's
-Security Center) is enabled: snaps ask before reading home or removable media.
+Security Center, still `experimental.apparmor-prompting`) is off. Its kernel
+side, Ubuntu's AppArmor notification listener (`struct aa_listener`, not in
+upstream Linux), freed a listener while snapd still had
+`/sys/kernel/security/apparmor/.notify` open. It happened right after a snapd
+self-refresh restarted snapd and reloaded every snap's AppArmor profile. When
+snapd closed the file, `epoll_ctl(EPOLL_CTL_DEL)` hit the freed memory and the
+kernel reported `list_del corruption`. The laptop kept running with a damaged
+kernel and froze hard at the next shutdown. The object was identified from the
+running kernel's BTF: it is the only 129–192 byte structure with a wait queue at
+offset 8 that snapd uses. Without prompting, snaps keep their normal
+confinement and interface rules; they just do not ask per file. Turn it back on
+in `apply-system.sh` once Ubuntu ships a fixed kernel.
 Firejail is deliberately not used: SUID, its own privilege-escalation CVEs, and
 Flatpak/snap already cover the GUI applications.
 

@@ -50,9 +50,12 @@ for kv in kernel.kptr_restrict=2 kernel.dmesg_restrict=1 kernel.sysrq=4 kernel.k
           dev.tty.ldisc_autoload=0 fs.protected_fifos=2 fs.protected_regular=2 net.ipv4.tcp_syncookies=1 \
           net.ipv4.conf.all.accept_redirects=0 net.ipv4.conf.all.send_redirects=0 \
           net.ipv4.conf.all.rp_filter=2 net.ipv6.conf.all.use_tempaddr=2 kernel.oops_limit=100 \
-          net.ipv4.conf.all.log_martians=1; do
+          net.ipv4.conf.all.log_martians=1 kernel.nmi_watchdog=1 kernel.hardlockup_panic=1 \
+          kernel.softlockup_panic=1 kernel.panic=10; do
     check "$kv" "sysctl_is ${kv%=*} ${kv#*=}"
 done
+check "crash reports: EFI pstore backend active" "grep -q efi_pstore /sys/module/pstore/parameters/backend"
+check "no kernel crash report waiting in /var/lib/systemd/pstore" "[ -z \"\$(ls -A /var/lib/systemd/pstore 2>/dev/null)\" ]"
 check "modules blocked: dccp sctp rds tipc firewire" "grep -q 'install dccp /bin/false' /etc/modprobe.d/99-disable-modules.conf"
 
 section "Network"
@@ -93,7 +96,7 @@ check "unprivileged userns restricted (Ubuntu default)" "sysctl_is kernel.apparm
 check "bubblewrap works (Claude Code / Flatpak)" "bwrap --ro-bind / / --dev /dev --proc /proc --unshare-all --die-with-parent true"
 check "socat installed (Claude Code sandbox proxy)" "command -v socat"
 # `snap get system` needs root; snapd's system-info endpoint is readable by any user
-check "snap prompting on"          "curl -s --unix-socket /run/snapd.socket http://localhost/v2/system-info | jq -e '.result.features[\"apparmor-prompting\"].enabled == true'"
+check "snap prompting off (kernel listener bug)" "curl -s --unix-socket /run/snapd.socket http://localhost/v2/system-info | jq -e '.result.features[\"apparmor-prompting\"].enabled != true'"
 check "Flathub remote"             "flatpak remotes 2>/dev/null | grep -q flathub"
 
 section "Virtualization and containers"
