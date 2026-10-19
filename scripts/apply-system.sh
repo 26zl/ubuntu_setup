@@ -315,6 +315,18 @@ if [[ ",$GROUPS_WANTED," == *,virt,* ]]; then
         else
             warn "libvirt default network not found (is libvirt-daemon-system installed?)"
         fi
+        # virt-manager creates the default storage pool on its first start only;
+        # without it new-windows-vm.sh and verify-setup find no pool
+        if virsh -c qemu:///system net-info default >/dev/null 2>&1 && ! virsh -c qemu:///system pool-info default >/dev/null 2>&1; then
+            if virsh -c qemu:///system pool-define-as default dir --target /var/lib/libvirt/images >/dev/null &&
+               virsh -c qemu:///system pool-build default >/dev/null &&
+               virsh -c qemu:///system pool-start default >/dev/null &&
+               virsh -c qemu:///system pool-autostart default >/dev/null; then
+                ok "libvirt default storage pool at /var/lib/libvirt/images"
+            else
+                warn "libvirt default storage pool not created: virsh -c qemu:///system pool-list --all"
+            fi
+        fi
     fi
     # silence podman-docker's "Emulate Docker CLI using podman" banner
     run touch /etc/containers/nodocker

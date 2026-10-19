@@ -26,7 +26,9 @@ path. The reasoning behind each choice, the trade-offs and the sources are in
 ## Quick start
 
 A fresh Ubuntu 26.04 desktop (LUKS, Secure Boot on), a user in `sudo`, internet.
-Optional, used when present: Homebrew on Linux, a `gh auth login` session, Ubuntu Pro.
+For the full tool set, install [Homebrew on Linux](https://brew.sh) first: without
+it gh, mise (Node, uv), yazi, sops, atuin and carapace are skipped and
+`verify-setup` reports them. Optional: Ubuntu Pro (free for personal use).
 
 ```bash
 sudo apt update && sudo apt full-upgrade -y && sudo reboot
@@ -38,6 +40,7 @@ bash scripts/ubuntu-setup.sh              # asks for sudo once; --groups all add
 ```
 
 Log out and in (groups), reboot once (kernel parameters, TRIM),
+set the git identity from your GitHub account with `bash scripts/setup-github.sh`,
 then run `verify-setup`. After editing anything, re-run the half it belongs to:
 `sudo bash scripts/apply-system.sh` or `bash scripts/apply-user.sh`.
 
