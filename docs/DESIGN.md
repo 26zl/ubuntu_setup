@@ -51,7 +51,8 @@ run halfway.
 
 Homebrew (`packages/brew.txt`) adds only what apt lacks or ships too old: gh
 (apt has 2.46), mise, yazi, sops, atuin (apt has 18.8), carapace, neovim (apt
-has 0.11, the nvim config requires 0.12). Flatpak
+has 0.11, the nvim config requires 0.12) and tree-sitter-cli (nvim-treesitter
+builds its parsers with it; apt's 0.25 is too old). Flatpak
 (`packages/flatpak.txt`) carries the sandboxed desktop apps, installed per user
 without root: Discord.
 

@@ -1,9 +1,12 @@
 # Homebrew formulae — only what apt does not ship (or ships too old). gh is here
 # because Ubuntu's 2.46 lags far behind, atuin because apt's 18.8 does, and
 # carapace is not in apt at all. neovim because the nvim config needs 0.12 and
-# apt ships 0.11 (the apt package stays as a fallback for root).
+# apt ships 0.11 (the apt package stays as a fallback for root); tree-sitter-cli
+# because nvim-treesitter's main branch builds its parsers with it and needs
+# 0.26 (apt has 0.25).
 gh
 neovim
+tree-sitter-cli
 mise
 yazi
 sops

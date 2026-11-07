@@ -68,7 +68,7 @@ then run `verify-setup`. After editing anything, re-run the half it belongs to:
 Symlinks every `configs/` file (a real file in the way is kept as
 `*.bak-<stamp>`), installs Nerd Fonts and the Nordzy icons and cursor from
 pinned releases, seeds the btop theme, installs the Homebrew formulae
-(`packages/brew.txt`: gh, mise, yazi, sops, atuin, carapace, neovim) when brew exists,
+(`packages/brew.txt`: gh, mise, yazi, sops, atuin, carapace, neovim, tree-sitter-cli) when brew exists,
 mise runtimes (Node LTS, uv), rustup stable, the Podman user socket and the Kali
 image, the battery charge limit (75–80 %), Flatpak Discord, the Caffeine and
 notification-focus GNOME extensions, the `26zl/nvim` and `26zl/vscode_config`
