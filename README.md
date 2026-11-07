@@ -58,7 +58,7 @@ then run `verify-setup`. After editing anything, re-run the half it belongs to:
 | Hardening | sysctl (`system/99-hardening.conf`), kernel parameters (`slab_nomerge init_on_alloc=1 page_alloc.shuffle=1 vsyscall=none`), blocked modules (dccp sctp rds tipc firewire), resolved (DNS-over-TLS opportunistic, DNSSEC allow-downgrade, LLMNR and mDNS off, Quad9 fallback), NetworkManager (random MAC while scanning, stable per-network MAC, no DHCP hostname), no core dumps, a frozen kernel panics and reboots after 10 s with the crash saved to EFI pstore, journal capped at 1G, sudo `use_pty` + 10 min timeout, unattended-upgrades runs on battery too and removes unused dependencies |
 | Browsers | Firefox and Chrome policies: telemetry, Studies, Pocket, sponsored content, metrics and background mode off |
 | Firewall | ufw: deny incoming, allow outgoing, deny routed; VMs on `virbr0` reach the host's DNS/DHCP only and are NATed out; nothing is opened on `tailscale0` |
-| Virtualization | libvirt default network active and autostarting, user in libvirt/kvm/wireshark, rootless Podman with the docker shim, Flathub; with `docker`: Docker Engine with published ports bound to 127.0.0.1, and the `podman-docker` shim's leftover `DOCKER_HOST` hook purged so `docker` really talks to the engine |
+| Virtualization | libvirt default network active and autostarting, user in libvirt/kvm/wireshark, rootless Podman with the docker shim, Flathub; with `docker`: Docker Engine with published ports bound to 127.0.0.1, the `podman-docker` shim's leftover `DOCKER_HOST` hook purged so `docker` really talks to the engine, and containerd's unused Kubernetes plugin off |
 | Storage | `discard` added to `/etc/crypttab` so the weekly `fstrim` reaches the SSD through LUKS |
 | Windows disk, dual boot | udev rule hides the BitLocker disk from Files and Disks, matched by GPT UUID; RTC kept in local time, Windows dropped from the GRUB menu (`system/99-no-os-prober.cfg`), GRUB upgrades leave the UEFI boot order alone |
 | Locale, terminal, snaps | `nb_NO.UTF-8` generated, kitty as `x-terminal-emulator`, snap app-permission prompting off until a kernel bug in it is fixed |
@@ -68,7 +68,7 @@ then run `verify-setup`. After editing anything, re-run the half it belongs to:
 Symlinks every `configs/` file (a real file in the way is kept as
 `*.bak-<stamp>`), installs Nerd Fonts and the Nordzy icons and cursor from
 pinned releases, seeds the btop theme, installs the Homebrew formulae
-(`packages/brew.txt`: gh, mise, yazi, sops, atuin, carapace) when brew exists,
+(`packages/brew.txt`: gh, mise, yazi, sops, atuin, carapace, neovim) when brew exists,
 mise runtimes (Node LTS, uv), rustup stable, the Podman user socket and the Kali
 image, the battery charge limit (75–80 %), Flatpak Discord, the Caffeine and
 notification-focus GNOME extensions, the `26zl/nvim` and `26zl/vscode_config`
@@ -111,7 +111,7 @@ configs alias `cat` to `bat` and `ls` to `eza`.
 | --- | --- |
 | `verify-setup` | read-only check of everything above; exit 1 on any failure |
 | `sysinfo` | temperatures, load, RAM, disk wear, battery, VPN state, failed units; prints no addresses |
-| `bash scripts/update.sh` | apt, snap, flatpak, brew, mise, rustup, the editor configs, firmware check |
+| `bash scripts/update.sh` | apt, snap, flatpak, brew, mise, rustup, the editor configs, the Kali image, firmware check |
 | `kali` · `kali persist` · `kali rm` | Kali Linux shell in rootless Podman, `~/pentest` mounted at `/work` |
 | `bash scripts/new-windows-vm.sh <Win11.iso>` | Windows 11 guest: UEFI + Secure Boot, swtpm TPM 2.0, virtio, q35, SPICE. `--prepare` first, `--dry-run` shows the command |
 | `sudo lynis audit system` · `sudo debsums -s` | hardening audit and package integrity |

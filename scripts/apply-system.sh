@@ -332,7 +332,8 @@ if [[ ",$GROUPS_WANTED," == *,virt,* ]]; then
     run touch /etc/containers/nodocker
     ok "podman: rootless, docker CLI shim"
 fi
-if [[ ",$GROUPS_WANTED," == *,docker,* ]]; then
+# also on re-runs without --groups all, once the engine is installed
+if [[ ",$GROUPS_WANTED," == *,docker,* ]] || installed docker.io; then
     getent group docker >/dev/null && ! id -nG "$TARGET_USER" | grep -w docker >/dev/null && { run usermod -aG docker "$TARGET_USER"; warn "$TARGET_USER added to docker (root-equivalent)"; }
     # published ports stay on localhost unless asked for explicitly: Docker's own
     # nftables rules are evaluated before ufw's and would expose them otherwise
@@ -340,6 +341,11 @@ if [[ ",$GROUPS_WANTED," == *,docker,* ]]; then
         unit_exists docker.service && run systemctl restart docker
     fi
     ok "docker: daemon.json (ports bind to 127.0.0.1 by default, live-restore)"
+    # containerd's Kubernetes CRI plugin is on by default and opens a stream
+    # server on a random 127.0.0.1 port; Docker never uses it
+    if deploy system/containerd-config.toml /etc/containerd/config.toml; then
+        unit_exists containerd.service && run systemctl restart containerd
+    fi
 fi
 # a removed podman-docker leaves /etc/profile.d/podman-docker.sh pointing
 # DOCKER_HOST at Podman; purge it by name (its only conffiles are the two

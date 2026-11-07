@@ -1,0 +1,4 @@
+# /etc/containerd/config.toml — Docker does not use containerd's Kubernetes CRI
+# plugin; left enabled, it opens a stream server on a random 127.0.0.1 port.
+version = 3
+disabled_plugins = ['io.containerd.grpc.v1.cri']

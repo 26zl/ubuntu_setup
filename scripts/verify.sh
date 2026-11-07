@@ -145,6 +145,7 @@ for c in fish kitty starship eza bat fd zoxide atuin carapace delta lazygit nvim
     check "$c on PATH" "command -v $c"
 done
 check "nvim config is 26zl/nvim"   "git -C ~/.config/nvim remote get-url origin | grep -q 26zl/nvim"
+check "nvim 0.12+ (the config requires it)" "nvim --version | head -n 1 | grep -qE 'v(0\.(1[2-9]|[2-9][0-9])|[1-9])'"
 check "VS Code settings linked"    "[ -L ~/.config/Code/User/settings.json ]"
 check "Discord (flatpak, user)"    "flatpak info --user com.discordapp.Discord"
 for c in vlc gimp obs ffmpeg magick pandoc pdftotext wormhole testssl hyperfine sushi; do
@@ -153,6 +154,7 @@ done
 if command -v docker >/dev/null && [ -S /var/run/docker.sock ]; then
     check "docker daemon reachable"  "docker info"
     check "docker ports bind to 127.0.0.1" "grep -q '127.0.0.1' /etc/docker/daemon.json"
+    check "containerd: CRI plugin off (no stream server on localhost)" "grep -q 'io.containerd.grpc.v1.cri' /etc/containerd/config.toml"
     check "docker CLI reaches the engine (no podman-docker profile hook, DOCKER_HOST not Podman)" "[ ! -e /etc/profile.d/podman-docker.sh ] && [[ \${DOCKER_HOST:-} != */podman/podman.sock ]]"
 fi
 check "kali image present"         "podman image exists docker.io/kalilinux/kali-rolling"

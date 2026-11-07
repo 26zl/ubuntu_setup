@@ -28,12 +28,20 @@ command -v rustup >/dev/null && rustup update
 
 section "Editor configs"
 if [ -d ~/.config/nvim/.git ]; then
-    git -C ~/.config/nvim pull -q --ff-only && nvim --headless "+Lazy! sync" +qa >/dev/null 2>&1 || true
+    git -C ~/.config/nvim checkout -q -- lazy-lock.json 2>/dev/null || true
+    git -C ~/.config/nvim pull -q --ff-only && nvim --headless "+Lazy! restore" +qa >/dev/null 2>&1 ||
+        echo "  nvim config not updated (git -C ~/.config/nvim status)"
 fi
 # The clone settings.json links to, wherever it lives.
 vcdir="$(dirname "$(readlink -f ~/.config/Code/User/settings.json 2>/dev/null || echo /nonexistent/x)")"
 if [ -d "$vcdir/.git" ]; then
     git -C "$vcdir" pull -q --autostash --ff-only || echo "  vscode_config not updated (git -C $vcdir status)"
+fi
+
+section "Containers"
+if command -v podman >/dev/null && podman image exists docker.io/kalilinux/kali-rolling; then
+    podman pull -q docker.io/kalilinux/kali-rolling >/dev/null && podman image prune -f >/dev/null ||
+        echo "  kali-rolling not refreshed (offline?)"
 fi
 
 section "Firmware"

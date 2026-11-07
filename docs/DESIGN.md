@@ -39,7 +39,7 @@ run halfway.
 
 | Group | What |
 | --- | --- |
-| `base` | fish, starship, kitty, fastfetch, Neovim 0.11, fzf, ripgrep, fd, bat, eza, zoxide, delta, lazygit, tealdeer, direnv, btop, jq/yq, diagnostics (lm-sensors, smartmontools, nvme-cli, powertop, iperf3, dnsutils, mtr), bubblewrap + socat, timeshift |
+| `base` | fish, starship, kitty, fastfetch, Neovim (apt's 0.11; brew's 0.12 runs the config), fzf, ripgrep, fd, bat, eza, zoxide, delta, lazygit, tealdeer, direnv, btop, jq/yq, diagnostics (lm-sensors, smartmontools, nvme-cli, powertop, iperf3, dnsutils, mtr), bubblewrap + socat, timeshift |
 | `desktop` | KeePassXC, Flatpak, Google Chrome (own repo), gnome-sushi (Space preview in Files), Intel VA-API (non-free driver) + OpenCL when an Intel GPU is present |
 | `dev` | build-essential, cmake, Python 3.14 dev + pipx, sqlite3/psql/redis clients, httpie, mkcert, shellcheck, shfmt, VS Code, Go 1.26, rustup, OpenJDK 21 |
 | `virt` | QEMU/KVM, libvirt, virt-manager, OVMF, swtpm (Windows 11 guests), virtiofsd, Podman + compose + docker shim, buildah, skopeo |
@@ -47,10 +47,11 @@ run halfway.
 | `vpn` | Mullvad VPN, Tailscale |
 | `media` | VLC, GIMP, OBS Studio (apt reuses the Qt/GTK libraries already installed; the Flathub builds would add three runtimes, ~2 GB) |
 | `tools` | general quick tools: ffmpeg, ImageMagick, pandoc, poppler-utils, qrencode + zbar, moreutils, pv, parallel, entr, fdupes, trash-cli, sshfs, cifs-utils, testdisk, speedtest-cli, testssl.sh, magic-wormhole, hyperfine, tokei |
-| `docker` | opt-in (`--groups all`): docker.io + compose v2 — a root daemon and a root-equivalent group. `system/docker-daemon.json` binds published ports to 127.0.0.1 by default because Docker's own firewall rules are evaluated before ufw's; ask for `0.0.0.0:80:80` explicitly to expose a port. |
+| `docker` | opt-in (`--groups all`): docker.io + compose v2 — a root daemon and a root-equivalent group. `system/docker-daemon.json` binds published ports to 127.0.0.1 by default because Docker's own firewall rules are evaluated before ufw's; ask for `0.0.0.0:80:80` explicitly to expose a port. `system/containerd-config.toml` turns off containerd's Kubernetes CRI plugin, which otherwise listens on a random `127.0.0.1` port that nothing here uses. |
 
 Homebrew (`packages/brew.txt`) adds only what apt lacks or ships too old: gh
-(apt has 2.46), mise, yazi, sops, atuin (apt has 18.8), carapace. Flatpak
+(apt has 2.46), mise, yazi, sops, atuin (apt has 18.8), carapace, neovim (apt
+has 0.11, the nvim config requires 0.12). Flatpak
 (`packages/flatpak.txt`) carries the sandboxed desktop apps, installed per user
 without root: Discord.
 
@@ -469,7 +470,7 @@ tunnels. `fwupd` for firmware, `mokutil --sb-state` for Secure Boot.
   already be starting them.
 - **Nord icons and cursor**: the same Nordzy set as the NixOS ThinkPad,
   installed per user from pinned releases with SHA-256 checks (Nordzy-icon 1.8.7
-  `Nordzy-dark`, Nordzy-cursors v2.4.0) into `~/.local/share/icons`; GDM and the
+  `Nordzy-dark`, Nordzy-cursors v2.5.0 from its GitLab release) into `~/.local/share/icons`; GDM and the
   lock screen keep Yaru's cursor because they do not read `~/.local`. `btop`
   uses its bundled Nord theme (`configs/btop/btop.conf`, copied because btop
   rewrites its config). New windows open centred (`center-new-windows`).
@@ -525,8 +526,8 @@ the `performance` profile with suspend off, masking CUPS (franckferman).
 | [Ubuntu snap prompting](https://ubuntu.com/core/docs/apparmor-prompting) / Security Center | snap app permissions |
 | [Claude Code sandboxing](https://code.claude.com/docs/en/sandboxing) | `configs/claude/settings.sandbox.json` |
 | [nerd-fonts v3.5.1](https://github.com/ryanoasis/nerd-fonts/releases/tag/v3.5.1) | fonts and their SHA-256 |
-| [Nordzy-icon 1.8.7](https://github.com/MolassesLover/Nordzy-icon), [Nordzy-cursors v2.4.0](https://github.com/guillaumeboehm/Nordzy-cursors) | icon and cursor theme |
-| [Caffeine v60](https://github.com/eonpatapon/gnome-shell-extension-caffeine) ([extensions.gnome.org](https://extensions.gnome.org/extension/517/caffeine/)) | keep-awake toggle and its SHA-256 |
+| [Nordzy-icon 1.8.7](https://github.com/MolassesLover/Nordzy-icon), [Nordzy-cursors v2.5.0](https://gitlab.com/gboehm/Nordzy-cursors) | icon and cursor theme |
+| [Caffeine v61](https://github.com/eonpatapon/gnome-shell-extension-caffeine) ([extensions.gnome.org](https://extensions.gnome.org/extension/517/caffeine/)) | keep-awake toggle and its SHA-256 |
 | [omakub](https://github.com/omacom/omakub), [konstruktoid/hardening](https://github.com/konstruktoid/hardening), [linutil](https://github.com/ChrisTitusTech/linutil) | btop theme and GNOME keys; motd-news, wsdd; TRIM |
 | [lockdown.sh](https://github.com/dolegi/lockdown.sh), [franckferman/ubuntu-post-install](https://github.com/franckferman/ubuntu-post-install), [webpro/awesome-dotfiles](https://github.com/webpro/awesome-dotfiles) | reviewed, nothing copied |
 | [26zl/nvim](https://github.com/26zl/nvim), [26zl/vscode_config](https://github.com/26zl/vscode_config), [26zl/cybersec-toolkit](https://github.com/26zl/cybersec-toolkit) | editor configs; the opt-in security toolkit |

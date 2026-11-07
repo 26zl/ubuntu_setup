@@ -124,8 +124,9 @@ install_theme() { # NAME URL SHA256
 }
 install_theme Nordzy-dark https://github.com/MolassesLover/Nordzy-icon/releases/download/1.8.7/Nordzy-dark.tar.gz \
     ad752b5ce70577408431734fc8004f928a00027a8fce6dd131ae2d0c3dc82069
-install_theme Nordzy-cursors https://github.com/guillaumeboehm/Nordzy-cursors/releases/download/v2.4.0/Nordzy-cursors.tar.gz \
-    3451c1221d58562a5eb647c45f3f7b5e2bbfe0aacf10d9cbc899bc36e5239e5a
+# Nordzy-cursors moved to GitLab; releases after v2.4.0 exist only there
+install_theme Nordzy-cursors https://gitlab.com/-/project/81427113/uploads/0c5aed7b5e3953e4802196a1072f6a91/Nordzy-cursors.tar.gz \
+    88f2a1ed293d7b8145208d8e29537951a237e59acd756805964a8d7494df4900
 
 section "btop"
 # copied, not linked: btop rewrites its config on exit
@@ -201,18 +202,18 @@ fi
 
 # Caffeine (GPL-2.0, github.com/eonpatapon/gnome-shell-extension-caffeine) keeps
 # the machine awake from Quick Settings, like PowerToys Awake. Pinned
-# extensions.gnome.org build of v60 (GNOME 45-50); apply-gnome.sh enables it.
+# extensions.gnome.org build of v61 (GNOME 45-51); apply-gnome.sh enables it.
 caffeine="$HOME/.local/share/gnome-shell/extensions/caffeine@patapon.info"
 if [ -f "$caffeine/metadata.json" ]; then
     ok "Caffeine present"
 elif ! command -v gnome-extensions >/dev/null; then
     info "gnome-extensions not found; skipping Caffeine"
 elif [ "$DRY" -eq 1 ]; then
-    echo "  [dry] install Caffeine v60 from extensions.gnome.org"
+    echo "  [dry] install Caffeine v61 from extensions.gnome.org"
 else
     dl=$(mktemp -d)
-    fetch "https://extensions.gnome.org/download-extension/caffeine@patapon.info.shell-extension.zip?version_tag=69851" \
-        dd2b5962ebad4e957390522e5df539764828011032360743e77cc5940ebac955 "$dl/caffeine.zip"
+    fetch "https://extensions.gnome.org/download-extension/caffeine@patapon.info.shell-extension.zip?version_tag=76057" \
+        3ec59c6d1a62c26ba5c45128b084b62ef4e112fa66008768b5094df940e6a164 "$dl/caffeine.zip"
     gnome-extensions install --force "$dl/caffeine.zip" && ok "Caffeine installed (loads at the next login)"
     rm -rf "$dl"
 fi
@@ -241,19 +242,27 @@ fi
 section "Neovim config (github.com/26zl/nvim)"
 nvdir="${XDG_CONFIG_HOME:-$HOME/.config}/nvim"
 if [ -d "$nvdir/.git" ] && git -C "$nvdir" remote get-url origin 2>/dev/null | grep '26zl/nvim' >/dev/null; then
-    run git -C "$nvdir" fetch -q origin main && run git -C "$nvdir" merge -q --ff-only FETCH_HEAD && ok "nvim config up to date"
+    # lazy-lock.json is upstream's; a plugin update may have rewritten the local copy
+    run git -C "$nvdir" checkout -q -- lazy-lock.json 2>/dev/null || true
+    if run git -C "$nvdir" fetch -q origin main && run git -C "$nvdir" merge -q --ff-only FETCH_HEAD; then
+        ok "nvim config up to date"
+    else
+        warn "nvim config not updated (git -C $nvdir status)"
+    fi
 else
     [ -e "$nvdir" ] && { run mv "$nvdir" "$nvdir.bak-$STAMP"; info "kept $nvdir as $nvdir.bak-$STAMP"; }
     run git clone -q https://github.com/26zl/nvim "$nvdir" && ok "cloned to $nvdir"
 fi
 if command -v nvim >/dev/null; then
-    # plugins from lazy-lock.json now instead of on the first interactive start
-    if [ "$DRY" -eq 1 ]; then
-        echo "  [dry] nvim --headless '+Lazy! sync' +qa"
-    elif timeout 600 nvim --headless "+Lazy! sync" +qa >/dev/null 2>&1; then
-        ok "plugins synced (lazy.nvim)"
+    # plugins exactly as lazy-lock.json pins them, now instead of on the first start
+    if ! nvim --version | head -n 1 | grep -qE 'v(0\.(1[2-9]|[2-9][0-9])|[1-9])'; then
+        warn "26zl/nvim needs Neovim 0.12; apt ships 0.11 — brew provides it (packages/brew.txt)"
+    elif [ "$DRY" -eq 1 ]; then
+        echo "  [dry] nvim --headless '+Lazy! restore' +qa"
+    elif timeout 600 nvim --headless "+Lazy! restore" +qa >/dev/null 2>&1; then
+        ok "plugins restored from lazy-lock.json"
     else
-        warn "headless plugin sync did not finish; open nvim once"
+        warn "headless plugin restore did not finish; open nvim once"
     fi
 fi
 
